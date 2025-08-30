@@ -11,6 +11,7 @@
     "lint": "expo lint"
   },
   "dependencies": {
+    "@google/genai": "^1.16.0",
     "@tamagui/config": "^1.132.23",
     "@tamagui/core": "^1.132.23",
     "expo": "~53.0.22",

@@ -14,13 +14,10 @@ import { OnboardingFlow } from '../components/ui/OnboardingFlow';
 import {
   BodyText,
   Container,
-  Divider,
   HeadlineText,
-  PrimaryButton,
-  SuccessCard,
-  TitleText
 } from '../components/ui/StyledComponents';
-import { GoalResponse, sendGoalsToGemini } from '../utils/geminiAPI';
+import { SuccessPlan } from '../components/ui/SuccessPlan';
+import { GoalResponse, sendGoalsToGemini } from '../utils/geminiAI';
 
 export default function HomeScreen() {
   const [goals, setGoals] = useState('');
@@ -34,15 +31,19 @@ export default function HomeScreen() {
       return;
     }
 
+    console.log('Starting goal analysis for:', goals);
     setIsLoading(true);
     try {
       const response = await sendGoalsToGemini(goals);
+      console.log('Received response from API:', response);
       setAiResponse(response);
+      console.log('Updated UI with response');
     } catch (error) {
       console.error('Error sending goals:', error);
       Alert.alert('Error', 'Failed to analyze your goals. Please try again.');
     } finally {
       setIsLoading(false);
+      console.log('Goal analysis complete');
     }
   };
 
@@ -50,12 +51,12 @@ export default function HomeScreen() {
     setHasGreeted(true);
   };
 
-  const handleReset = () => {
+  const handleNewGoals = () => {
     setGoals('');
     setAiResponse(null);
-    setHasGreeted(false);
   };
 
+  // Show onboarding if not greeted
   if (!hasGreeted) {
     return (
       <SafeAreaView style={styles.container}>
@@ -64,10 +65,17 @@ export default function HomeScreen() {
     );
   }
 
+  // Show loading screen while processing
   if (isLoading) {
     return <AILoadingScreen onComplete={() => setIsLoading(false)} />;
   }
 
+  // Show success plan if we have a response
+  if (aiResponse) {
+    return <SuccessPlan goals={goals} response={aiResponse} onNewGoals={handleNewGoals} />;
+  }
+
+  // Show goal input screen
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -94,73 +102,6 @@ export default function HomeScreen() {
                   isLoading={isLoading}
                 />
               </View>
-
-              {aiResponse && (
-                <View style={styles.responseSection}>
-                  <SuccessCard>
-                    <View style={styles.responseHeader}>
-                      <TitleText>Your Personalized Success Plan</TitleText>
-                      <BodyText variant="medium">Powered by AI Analysis</BodyText>
-                    </View>
-                    
-                    <View style={styles.motivationSection}>
-                      <View style={styles.sectionHeader}>
-                        <TitleText>Motivation Boost</TitleText>
-                      </View>
-                      <BodyText variant="medium">{aiResponse.motivation}</BodyText>
-                    </View>
-                    
-                    <Divider />
-                    
-                    <View style={styles.suggestionSection}>
-                      <View style={styles.sectionHeader}>
-                        <TitleText>Strategic Suggestions</TitleText>
-                      </View>
-                      {aiResponse.suggestions.map((suggestion, index) => (
-                        <View key={index} style={styles.listItem}>
-                          <View style={styles.bulletPoint} />
-                          <BodyText variant="medium">{suggestion}</BodyText>
-                        </View>
-                      ))}
-                    </View>
-                    
-                    <Divider />
-                    
-                    <View style={styles.stepsSection}>
-                      <View style={styles.sectionHeader}>
-                        <TitleText>Next Actions</TitleText>
-                      </View>
-                      {aiResponse.steps.map((step, index) => (
-                        <View key={index} style={styles.stepItem}>
-                          <View style={styles.stepNumber}>
-                            <BodyText variant="medium">{index + 1}</BodyText>
-                          </View>
-                          <BodyText variant="medium">{step}</BodyText>
-                        </View>
-                      ))}
-                    </View>
-                    
-                    <View style={styles.actionButtons}>
-                      <PrimaryButton 
-                        variant="outlined" 
-                        onPress={() => setAiResponse(null)}
-                        size="medium"
-                      >
-                        Refine Goals
-                      </PrimaryButton>
-                    </View>
-                  </SuccessCard>
-                </View>
-              )}
-              
-              <View style={styles.largeSpacing} />
-              <PrimaryButton
-                variant="outlined"
-                onPress={handleReset}
-              >
-                Start Over
-              </PrimaryButton>
-              <View style={styles.spacing} />
             </View>
           </Container>
         </ScrollView>
@@ -173,13 +114,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAFAFA',
-  },
-  welcomeContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 40,
   },
   keyboardContainer: {
     flex: 1,
@@ -200,68 +134,5 @@ const styles = StyleSheet.create({
   },
   spacing: {
     height: 16,
-  },
-  smallSpacing: {
-    height: 8,
-  },
-  largeSpacing: {
-    height: 24,
-  },
-  extraLargeSpacing: {
-    height: 40,
-  },
-  listItemContainer: {
-    marginBottom: 4,
-  },
-  responseSection: {
-    marginTop: 32,
-  },
-  responseHeader: {
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  motivationSection: {
-    marginBottom: 16,
-  },
-  suggestionSection: {
-    marginBottom: 16,
-  },
-  stepsSection: {
-    marginBottom: 16,
-  },
-  sectionHeader: {
-    marginBottom: 12,
-  },
-  listItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 8,
-  },
-  bulletPoint: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#2196F3',
-    marginTop: 8,
-    marginRight: 12,
-  },
-  stepItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 12,
-  },
-  stepNumber: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#2196F3',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    marginTop: 2,
-  },
-  actionButtons: {
-    alignItems: 'center',
-    marginTop: 16,
   },
 });

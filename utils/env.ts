@@ -16,7 +16,7 @@ export const ENV = {
   // Helper to get API key with validation
   getGeminiKey(): string {
     if (!this.hasGeminiKey()) {
-      console.warn('⚠️ Gemini API key not found. Add EXPO_PUBLIC_GEMINI_API_KEY to your .env file');
+      console.warn('Gemini API key not found. Add EXPO_PUBLIC_GEMINI_API_KEY to your .env file');
       return '';
     }
     return this.GEMINI_API_KEY!;
