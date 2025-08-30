@@ -12,9 +12,6 @@ import {
 } from 'react-native';
 import config from '../../config';
 import { GoalResponse } from '../../utils/geminiAI';
-import {
-    PrimaryButton
-} from '../ui/StyledComponents';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -202,11 +199,15 @@ export const SuccessPlan: React.FC<SuccessPlanProps> = ({ goals, response, onNew
               </View>
             </View>
 
-            {/* Action Button */}
+            {/* Premium Action Button */}
             <View style={styles.actionContainer}>
-              <PrimaryButton onPress={onNewGoals} size="large">
-                Create New Goals
-              </PrimaryButton>
+              <TouchableOpacity 
+                style={styles.premiumButton} 
+                onPress={onNewGoals}
+                activeOpacity={0.95}
+              >
+                <Text style={styles.premiumButtonText}>Create New Goals</Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
         </ScrollView>
@@ -447,5 +448,27 @@ const styles = StyleSheet.create({
     marginTop: 40,
     alignItems: 'center',
     paddingHorizontal: 20,
+  },
+  premiumButton: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 8,
+    paddingHorizontal: 48,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: '#333333',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+    minWidth: 200,
+  },
+  premiumButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
 });

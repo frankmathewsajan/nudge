@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
@@ -76,8 +75,8 @@ export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo
 
   const handleSubmitPress = useCallback(() => {
     Animated.sequence([
-      Animated.timing(buttonScale, { toValue: 0.95, duration: 100, useNativeDriver: true }),
-      Animated.timing(buttonScale, { toValue: 1, duration: 100, useNativeDriver: true }),
+      Animated.timing(buttonScale, { toValue: 0.96, duration: 120, useNativeDriver: true }),
+      Animated.spring(buttonScale, { toValue: 1, useNativeDriver: true, tension: 150, friction: 6 }),
     ]).start();
     onSubmit();
   }, [onSubmit]);
@@ -88,10 +87,13 @@ export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo
     <View style={styles.container}>
       <Animated.View style={[styles.inputContainer, {
         borderColor: focusAnim.interpolate({
-          inputRange: [0, 1], outputRange: ['#E0E0E0', '#2196F3'],
+          inputRange: [0, 1], outputRange: ['#E5E7EB', '#D4AF37'],
         }),
         borderWidth: focusAnim.interpolate({
           inputRange: [0, 1], outputRange: [1, 2],
+        }),
+        shadowOpacity: focusAnim.interpolate({
+          inputRange: [0, 1], outputRange: [0.05, 0.1],
         }),
       }]}>
         <TextInput
@@ -101,8 +103,8 @@ export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo
           onFocus={handleFocus}
           onBlur={handleBlur}
           multiline
-          placeholder="What are your goals?"
-          placeholderTextColor="#999"
+          placeholder="What drives you forward? Share your goals..."
+          placeholderTextColor="#9CA3AF"
           editable={!disabled}
           textAlignVertical="top"
         />
@@ -114,7 +116,7 @@ export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo
                 inputRange: [0, 100], outputRange: ['0%', '100%'], extrapolate: 'clamp',
               }),
               backgroundColor: progressWidth.interpolate({
-                inputRange: [0, 99, 100], outputRange: ['#2196F3', '#2196F3', '#4CAF50'], extrapolate: 'clamp',
+                inputRange: [0, 99, 100], outputRange: ['#D4AF37', '#D4AF37', '#34D399'], extrapolate: 'clamp',
               }),
             }]} />
           </View>
@@ -156,16 +158,11 @@ export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo
           onPress={handleSubmitPress}
           disabled={!isReadyToSubmit}
         >
-          <LinearGradient
-            colors={isReadyToSubmit ? ['#4CAF50', '#45A049'] : ['#BDBDBD', '#9E9E9E']}
-            style={styles.buttonGradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
-            <Text style={styles.submitButtonText}>
+          <View style={[styles.buttonContent, !isReadyToSubmit && styles.buttonContentDisabled]}>
+            <Text style={[styles.submitButtonText, !isReadyToSubmit && styles.submitButtonTextDisabled]}>
               {isLoading ? 'Processing...' : 'Transform Goals'}
             </Text>
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
       </Animated.View>
     </View>
@@ -173,40 +170,146 @@ export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo
 });
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 20 },
+  container: { paddingHorizontal: 24 },
   inputContainer: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 20, marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowRadius: 8, elevation: 4,
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 12, 
+    padding: 24, 
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 12, 
+    elevation: 3,
   },
-  textInput: { fontSize: 16, color: '#212121', lineHeight: 24, minHeight: 120, textAlignVertical: 'top' },
-  progressContainer: { marginTop: 16 },
-  progressTrack: { height: 4, backgroundColor: '#E0E0E0', borderRadius: 2, marginBottom: 8 },
+  textInput: { 
+    fontSize: 18, 
+    color: '#1F2937', 
+    lineHeight: 28, 
+    minHeight: 140, 
+    textAlignVertical: 'top',
+    fontWeight: '400',
+    letterSpacing: -0.2,
+  },
+  progressContainer: { marginTop: 20 },
+  progressTrack: { 
+    height: 3, 
+    backgroundColor: '#F3F4F6', 
+    borderRadius: 2, 
+    marginBottom: 12 
+  },
   progressFill: { height: '100%', borderRadius: 2 },
-  wordCountText: { fontSize: 12, color: '#666', textAlign: 'center' },
+  wordCountText: { 
+    fontSize: 13, 
+    color: '#6B7280', 
+    textAlign: 'center',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
   suggestionsToggle: {
-    alignSelf: 'center', paddingVertical: 12, paddingHorizontal: 20, 
-    backgroundColor: '#E3F2FD', borderRadius: 20, marginBottom: 16,
+    alignSelf: 'center', 
+    paddingVertical: 14, 
+    paddingHorizontal: 24, 
+    backgroundColor: '#F9FAFB', 
+    borderRadius: 8, 
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  suggestionsToggleText: { color: '#1976D2', fontSize: 14, fontWeight: '500' },
+  suggestionsToggleText: { 
+    color: '#374151', 
+    fontSize: 15, 
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
   suggestionsContainer: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 20, marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.1, shadowRadius: 4, elevation: 2,
+    backgroundColor: '#FFFFFF', 
+    borderRadius: 12, 
+    padding: 24, 
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 1 }, 
+    shadowOpacity: 0.05, 
+    shadowRadius: 8, 
+    elevation: 2,
   },
-  suggestionsTitle: { fontSize: 16, fontWeight: '600', color: '#212121', marginBottom: 12, textAlign: 'center' },
-  suggestionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  suggestionsTitle: { 
+    fontSize: 18, 
+    fontWeight: '600', 
+    color: '#1F2937', 
+    marginBottom: 16, 
+    textAlign: 'center',
+    letterSpacing: -0.3,
+  },
+  suggestionsGrid: { 
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    gap: 12, 
+    marginBottom: 20 
+  },
   suggestionChip: {
-    backgroundColor: '#F5F5F5', paddingHorizontal: 16, paddingVertical: 8, 
-    borderRadius: 20, borderWidth: 1, borderColor: '#E0E0E0',
+    backgroundColor: '#F9FAFB', 
+    paddingHorizontal: 18, 
+    paddingVertical: 10, 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    borderColor: '#E5E7EB',
   },
-  suggestionText: { fontSize: 14, color: '#424242' },
-  hideSuggestions: { alignSelf: 'center', paddingVertical: 8 },
-  hideSuggestionsText: { fontSize: 14, color: '#666' },
-  submitButtonContainer: { marginVertical: 24 },
+  suggestionText: { 
+    fontSize: 14, 
+    color: '#374151',
+    fontWeight: '500',
+  },
+  hideSuggestions: { 
+    alignSelf: 'center', 
+    paddingVertical: 10 
+  },
+  hideSuggestionsText: { 
+    fontSize: 14, 
+    color: '#6B7280',
+    fontWeight: '500',
+  },
+  submitButtonContainer: { marginVertical: 32 },
   submitButton: {
-    height: 56, borderRadius: 28, overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 6,
+    height: 60, 
+    borderRadius: 8, 
+    overflow: 'hidden',
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.1, 
+    shadowRadius: 12, 
+    elevation: 4,
   },
-  submitButtonDisabled: { shadowOpacity: 0.1, elevation: 2 },
-  buttonGradient: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
-  submitButtonText: { fontSize: 18, fontWeight: '600', color: '#FFF', textAlign: 'center' },
+  submitButtonDisabled: { 
+    shadowOpacity: 0.05, 
+    elevation: 1 
+  },
+  buttonContent: {
+    flex: 1,
+    backgroundColor: '#1A1A1A',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+    borderWidth: 1,
+    borderColor: '#333333',
+  },
+  buttonContentDisabled: {
+    backgroundColor: '#9CA3AF',
+    borderColor: '#D1D5DB',
+  },
+  submitButtonText: { 
+    fontSize: 16, 
+    fontWeight: '600', 
+    color: '#FFFFFF', 
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  submitButtonTextDisabled: {
+    color: '#F3F4F6',
+  },
 });
