@@ -11,7 +11,7 @@ import {
     View,
 } from 'react-native';
 import config from '../../config';
-import { GoalResponse } from '../../utils/geminiAI';
+import { GoalResponse, Task } from '../../utils/geminiAI';
 
 const { width: screenWidth } = Dimensions.get('window');
 
@@ -19,13 +19,22 @@ interface SuccessPlanProps {
   goals: string;
   response: GoalResponse;
   onNewGoals: () => void;
+  onConfirmPlan: () => void;
 }
 
-export const SuccessPlan: React.FC<SuccessPlanProps> = ({ goals, response, onNewGoals }) => {
+export const SuccessPlan: React.FC<SuccessPlanProps> = ({ goals, response, onNewGoals, onConfirmPlan }) => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
-  const cardAnimations = useRef(response.suggestions.map(() => new Animated.Value(0))).current;
-  const stepAnimations = useRef(response.steps.map(() => new Animated.Value(0))).current;
+  
+  // Calculate total tasks for animations
+  const allTasks = [
+    ...response.urgent,
+    ...response.long_term,
+    ...response.maintenance,
+    ...response.optional
+  ];
+  
+  const cardAnimations = useRef(allTasks.map(() => new Animated.Value(0))).current;
 
   useEffect(() => {
     // Stagger animations for smooth entrance
@@ -43,22 +52,15 @@ export const SuccessPlan: React.FC<SuccessPlanProps> = ({ goals, response, onNew
         }),
       ]),
       // Animate cards with stagger
-      Animated.stagger(150, [
-        ...cardAnimations.map(anim =>
+      Animated.stagger(150, 
+        cardAnimations.map(anim =>
           Animated.timing(anim, {
             toValue: 1,
             duration: 600,
             useNativeDriver: true,
           })
-        ),
-        ...stepAnimations.map(anim =>
-          Animated.timing(anim, {
-            toValue: 1,
-            duration: 600,
-            useNativeDriver: true,
-          })
-        ),
-      ]),
+        )
+      ),
     ]).start();
   }, []);
 
@@ -83,6 +85,52 @@ export const SuccessPlan: React.FC<SuccessPlanProps> = ({ goals, response, onNew
       >
         {children}
       </TouchableOpacity>
+    );
+  };
+
+  const TaskCard: React.FC<{
+    task: Task;
+    index: number;
+    categoryColor: string;
+  }> = ({ task, index, categoryColor }) => {
+    const animationIndex = allTasks.findIndex(t => t === task);
+    
+    return (
+      <Animated.View
+        style={[
+          styles.cardWrapper,
+          {
+            opacity: cardAnimations[animationIndex] || 1,
+            transform: [
+              {
+                translateY: cardAnimations[animationIndex]?.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [20, 0],
+                }) || 0,
+              },
+            ],
+          },
+        ]}
+      >
+        <PremiumCard variant="primary" style={styles.taskCard}>
+          <View style={styles.taskHeader}>
+            <View style={[styles.priorityIndicator, { backgroundColor: categoryColor }]}>
+              <Text style={styles.priorityText}>{task.priority}</Text>
+            </View>
+            <View style={styles.taskMeta}>
+              <Text style={styles.taskDuration}>{task.duration}</Text>
+              <Text style={styles.taskFrequency}>{task.frequency}</Text>
+            </View>
+          </View>
+          <Text style={styles.taskTitle}>{task.task}</Text>
+          <View style={styles.taskDetails}>
+            <Text style={styles.taskTime}>{task.suggested_time}</Text>
+            {task.deadline && (
+              <Text style={styles.taskDeadline}>Due: {task.deadline}</Text>
+            )}
+          </View>
+        </PremiumCard>
+      </Animated.View>
     );
   };
 
@@ -121,92 +169,93 @@ export const SuccessPlan: React.FC<SuccessPlanProps> = ({ goals, response, onNew
               </View>
             </View>
 
-            {/* Hero Motivation Card */}
-            <PremiumCard variant="hero" style={styles.motivationSection}>
-              <Text style={styles.sectionLabel}>Motivation</Text>
-              <Text style={styles.motivationText}>{response.motivation}</Text>
-            </PremiumCard>
-
             {/* Premium Grid Layout */}
             <View style={styles.premiumGrid}>
-              {/* Strategic Suggestions */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Strategic Insights</Text>
-                <View style={styles.cardsGrid}>
-                  {response.suggestions.map((suggestion, index) => (
-                    <Animated.View
-                      key={index}
-                      style={[
-                        styles.cardWrapper,
-                        {
-                          opacity: cardAnimations[index],
-                          transform: [
-                            {
-                              translateY: cardAnimations[index].interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [20, 0],
-                              }),
-                            },
-                          ],
-                        },
-                      ]}
-                    >
-                      <PremiumCard variant="primary" style={styles.suggestionCard}>
-                        <View style={styles.cardHeader}>
-                          <View style={styles.cardNumber}>
-                            <Text style={styles.cardNumberText}>{index + 1}</Text>
-                          </View>
-                        </View>
-                        <Text style={styles.cardContent}>{suggestion}</Text>
-                      </PremiumCard>
-                    </Animated.View>
-                  ))}
+              {/* Urgent Tasks */}
+              {response.urgent.length > 0 && (
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Urgent</Text>
+                  <View style={styles.cardsGrid}>
+                    {response.urgent.map((task, index) => (
+                      <TaskCard 
+                        key={`urgent-${index}`}
+                        task={task} 
+                        index={index} 
+                        categoryColor="#EF4444" 
+                      />
+                    ))}
+                  </View>
                 </View>
-              </View>
+              )}
 
-              {/* Action Steps */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Next Actions</Text>
-                <View style={styles.stepsContainer}>
-                  {response.steps.map((step, index) => (
-                    <Animated.View
-                      key={index}
-                      style={[
-                        styles.stepWrapper,
-                        {
-                          opacity: stepAnimations[index],
-                          transform: [
-                            {
-                              translateX: stepAnimations[index].interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [30, 0],
-                              }),
-                            },
-                          ],
-                        },
-                      ]}
-                    >
-                      <PremiumCard variant="secondary" style={styles.stepCard}>
-                        <View style={styles.stepHeader}>
-                          <Text style={styles.stepNumber}>{index + 1}</Text>
-                          <View style={styles.stepLine} />
-                        </View>
-                        <Text style={styles.stepContent}>{step}</Text>
-                      </PremiumCard>
-                    </Animated.View>
-                  ))}
+              {/* Long Term Goals */}
+              {response.long_term.length > 0 && (
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Long Term</Text>
+                  <View style={styles.cardsGrid}>
+                    {response.long_term.map((task, index) => (
+                      <TaskCard 
+                        key={`long-term-${index}`}
+                        task={task} 
+                        index={index} 
+                        categoryColor="#D4AF37" 
+                      />
+                    ))}
+                  </View>
                 </View>
-              </View>
+              )}
+
+              {/* Maintenance Tasks */}
+              {response.maintenance.length > 0 && (
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Maintenance</Text>
+                  <View style={styles.cardsGrid}>
+                    {response.maintenance.map((task, index) => (
+                      <TaskCard 
+                        key={`maintenance-${index}`}
+                        task={task} 
+                        index={index} 
+                        categoryColor="#6B7280" 
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Optional Tasks */}
+              {response.optional.length > 0 && (
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Optional</Text>
+                  <View style={styles.cardsGrid}>
+                    {response.optional.map((task, index) => (
+                      <TaskCard 
+                        key={`optional-${index}`}
+                        task={task} 
+                        index={index} 
+                        categoryColor="#8B5CF6" 
+                      />
+                    ))}
+                  </View>
+                </View>
+              )}
             </View>
 
-            {/* Premium Action Button */}
+            {/* Premium Action Buttons */}
             <View style={styles.actionContainer}>
               <TouchableOpacity 
-                style={styles.premiumButton} 
+                style={styles.primaryButton} 
+                onPress={onConfirmPlan}
+                activeOpacity={0.95}
+              >
+                <Text style={styles.primaryButtonText}>Looks Good!</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.secondaryButton} 
                 onPress={onNewGoals}
                 activeOpacity={0.95}
               >
-                <Text style={styles.premiumButtonText}>Create New Goals</Text>
+                <Text style={styles.secondaryButtonText}>Create New Goals</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -338,24 +387,70 @@ const styles = StyleSheet.create({
     padding: 24,
   },
 
-  // Motivation Section
-  motivationSection: {
-    marginBottom: 40,
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#D4AF37',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
+  // Task Cards
+  taskCard: {
+    minHeight: 120,
     marginBottom: 16,
   },
-  motivationText: {
-    fontSize: 20,
-    fontWeight: '300',
+  taskHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  priorityIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  priorityText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  taskMeta: {
+    alignItems: 'flex-end',
+  },
+  taskDuration: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#6B7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  taskFrequency: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    marginTop: 2,
+  },
+  taskTitle: {
+    fontSize: 18,
+    fontWeight: '600',
     color: '#1F2937',
-    lineHeight: 32,
-    textAlign: 'left',
+    marginBottom: 8,
+    lineHeight: 24,
+  },
+  taskDetails: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  taskTime: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
+    textTransform: 'capitalize',
+  },
+  taskDeadline: {
+    fontSize: 12,
+    color: '#EF4444',
+    fontWeight: '600',
+    backgroundColor: '#FEF2F2',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
 
   // Premium Grid
@@ -380,74 +475,52 @@ const styles = StyleSheet.create({
   cardWrapper: {
     marginBottom: 16,
   },
-  suggestionCard: {
-    minHeight: 120,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  cardNumber: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#1F2937',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardNumberText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  cardContent: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#374151',
-    lineHeight: 24,
-  },
-
-  // Steps
-  stepsContainer: {
-    gap: 16,
-  },
-  stepWrapper: {
-    marginBottom: 16,
-  },
-  stepCard: {
-    minHeight: 100,
-  },
-  stepHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  stepNumber: {
-    fontSize: 18,
-    fontWeight: '300',
-    color: '#D4AF37',
-    marginRight: 12,
-    minWidth: 24,
-  },
-  stepLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  stepContent: {
-    fontSize: 16,
-    fontWeight: '400',
-    color: '#374151',
-    lineHeight: 24,
-    paddingLeft: 36,
-  },
 
   // Action
   actionContainer: {
     marginTop: 40,
     alignItems: 'center',
     paddingHorizontal: 20,
+    gap: 16,
+  },
+  primaryButton: {
+    backgroundColor: '#D4AF37', // Gold primary action
+    borderRadius: 8,
+    paddingHorizontal: 48,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: '#B8941F',
+    shadowColor: '#D4AF37',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 4,
+    minWidth: 200,
+  },
+  primaryButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 8,
+    paddingHorizontal: 48,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: '#D0D0D0',
+    minWidth: 200,
+  },
+  secondaryButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#666666',
+    textAlign: 'center',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   premiumButton: {
     backgroundColor: '#1A1A1A',

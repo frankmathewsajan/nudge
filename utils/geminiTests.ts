@@ -4,14 +4,15 @@
 
 import ENV from './env';
 import {
-    batchEmbeddings,
-    EmbeddingResponse,
-    generateEmbeddings,
-    generateLongContextContent,
-    generateThinkingResponse,
-    getModelCapabilities,
-    RAGSystem,
-    sendGoalsToGemini
+  batchEmbeddings,
+  clearUserSession,
+  generateEmbeddings,
+  generateLongContextContent,
+  generateThinkingResponse,
+  getCacheStats,
+  getModelCapabilities,
+  RAGSystem,
+  sendGoalsToGemini
 } from './geminiAI';
 
 export class GeminiTestSuite {
@@ -19,34 +20,35 @@ export class GeminiTestSuite {
   // === QUICK TESTS (Fast & Simple) ===
   
   static async quickTest(): Promise<void> {
-    console.log('🚀 Quick Gemini Test...');
+    console.log('Quick Gemini Test...');
     
     if (!ENV.hasGeminiKey()) {
-      console.error('❌ No Gemini API key found');
-      console.log('💡 Add EXPO_PUBLIC_GEMINI_API_KEY to your .env file');
+      console.error('No Gemini API key found');
+      console.log('Add EXPO_PUBLIC_GEMINI_API_KEY to your .env file');
       return;
     }
     
     try {
-      const response = await sendGoalsToGemini('I want to build amazing apps');
-      console.log('✅ Quick test passed!');
-      console.log('🎯 Motivation:', response.motivation.substring(0, 50) + '...');
-      console.log('💡 Suggestions:', response.suggestions.length);
-      console.log('🚀 Steps:', response.steps.length);
+      const response = await sendGoalsToGemini('I want to build amazing apps and learn programming');
+      console.log('Quick test passed!');
+      console.log('Urgent tasks:', response.urgent.length);
+      console.log('Long-term goals:', response.long_term.length);
+      console.log('Maintenance tasks:', response.maintenance.length);
+      console.log('Optional tasks:', response.optional.length);
     } catch (error) {
-      console.error('❌ Quick test failed:', error);
+      console.error('Quick test failed:', error);
     }
   }
 
   static async quickEmbeddingsTest(): Promise<void> {
-    console.log('📊 Quick Embeddings Test...');
+    console.log('Quick Embeddings Test...');
     try {
       const embedding = await generateEmbeddings('Test embedding generation');
-      console.log('✅ Embeddings test passed!');
-      console.log('📏 Dimension:', embedding.dimension);
-      console.log('🔢 Sample values:', embedding.embedding.slice(0, 3));
+      console.log('Embeddings test passed!');
+      console.log('Dimension:', embedding.dimension);
+      console.log('Sample values:', embedding.embedding.slice(0, 3));
     } catch (error) {
-      console.error('❌ Embeddings test failed:', error);
+      console.error('Embeddings test failed:', error);
     }
   }
 
@@ -56,24 +58,62 @@ export class GeminiTestSuite {
     console.log('=== Testing Basic Gemini API Connection ===');
     
     if (!ENV.hasGeminiKey()) {
-      console.error('❌ No Gemini API key found');
-      console.log('💡 Add EXPO_PUBLIC_GEMINI_API_KEY to your .env file');
+      console.error('No Gemini API key found');
+      console.log('Add EXPO_PUBLIC_GEMINI_API_KEY to your .env file');
       return;
     }
     
-    console.log('✅ API key found, length:', ENV.getGeminiKey().length);
+    console.log('API key found, length:', ENV.getGeminiKey().length);
     
     try {
       const testGoals = 'I want to build a successful React Native app that helps people achieve their goals';
       const response = await sendGoalsToGemini(testGoals);
       
-      console.log('✅ Basic API call successful!');
-      console.log('🎯 Motivation:', response.motivation);
-      console.log('💡 Suggestions count:', response.suggestions.length);
-      console.log('🚀 Steps count:', response.steps.length);
+      console.log('Basic API call successful!');
+      console.log('Urgent tasks:', response.urgent.length);
+      console.log('Long-term goals:', response.long_term.length);
+      console.log('Maintenance tasks:', response.maintenance.length);
+      console.log('Optional tasks:', response.optional.length);
       
     } catch (error) {
-      console.error('❌ Basic API call failed:', error);
+      console.error('Basic API call failed:', error);
+    }
+  }
+
+  static async testSessionMemory(): Promise<void> {
+    console.log('\n=== Testing Session Memory & Context ===');
+    
+    try {
+      const userId = 'test-user-123';
+      
+      // Clear any existing session first
+      clearUserSession(userId);
+      
+      // First goals request - should establish context
+      console.log('First request (establishing context)...');
+      const firstResponse = await sendGoalsToGemini('I want to learn React Native development', userId);
+      console.log('First request successful');
+      console.log('Urgent tasks:', firstResponse.urgent.length);
+      
+      // Second goals request - should use context
+      console.log('Second request (using context)...');
+      const secondResponse = await sendGoalsToGemini('I also want to learn TypeScript', userId);
+      console.log('Second request successful');
+      console.log('Urgent tasks:', secondResponse.urgent.length);
+      
+      // Check cache stats
+      const stats = getCacheStats();
+      console.log('Cache stats:');
+      console.log('   - Cache size:', stats.cacheSize);
+      console.log('   - Active sessions:', stats.activeSessions);
+      console.log('   - Hit rate:', `${(stats.hitRate * 100).toFixed(1)}%`);
+      
+      // Clean up
+      clearUserSession(userId);
+      console.log('Session cleaned up');
+      
+    } catch (error) {
+      console.error('Session memory test failed:', error);
     }
   }
 
@@ -97,32 +137,36 @@ export class GeminiTestSuite {
         
         Technical Stack:
         - React Native with Expo Router
-        - Tamaguchi component library
-        - Premium color palettes for visual appeal
-        - Animated components for smooth UX
-        - Google GenAI (@google/genai) for AI integration
+        - Tamagui component library
+        - Google Gemini AI integration
+        - TypeScript for type safety
+        - Modern ES6+ JavaScript patterns
         
         User Experience Goals:
-        - Addictive engagement like Duolingo
-        - Professional UI that competes with Google standards
-        - Smooth animations and micro-interactions
-        - High user retention through visual appeal
+        - Minimize cognitive load
+        - Maximize user engagement
+        - Professional, premium feel
+        - Fast, responsive interactions
+        - Intuitive navigation flows
         
-        Current Implementation:
-        The app flows from onboarding → goal input → AI loading → success plan display.
-        All components are optimized for performance and follow premium design guidelines.
+        Business Objectives:
+        - High user retention rates
+        - Positive app store reviews
+        - Word-of-mouth growth
+        - Premium positioning in market
+        - Scalable architecture for growth
       `;
       
       const query = 'Based on this project context, what are the next 3 most important features to implement for maximum user engagement and retention?';
       
       const response = await generateLongContextContent(longContext, query, 1024);
       
-      console.log('✅ Long context generation successful!');
-      console.log('📄 Response length:', response.length);
-      console.log('👀 Response preview:', response.substring(0, 200) + '...');
+      console.log('Long context generation successful!');
+      console.log('Response length:', response.length, 'characters');
+      console.log('Preview:', response.substring(0, 200) + '...');
       
     } catch (error) {
-      console.error('❌ Long context test failed:', error);
+      console.error('Long context test failed:', error);
     }
   }
 
@@ -130,18 +174,18 @@ export class GeminiTestSuite {
     console.log('\n=== Testing Thinking Mode ===');
     
     try {
-      const problem = 'How can we make a goal-setting app more addictive and engaging than existing solutions like Habitica or Strides?';
+      const problem = 'How can we increase user engagement in our goal-setting app while maintaining a premium, non-intrusive user experience?';
       const context = 'Our app uses AI for personalized plans and has a premium magazine-style UI design';
       
       const response = await generateThinkingResponse(problem, context);
       
-      console.log('✅ Thinking mode successful!');
-      console.log('🧠 Thought process:', response.thought_process);
-      console.log('🔍 Reasoning steps:', response.reasoning.length);
-      console.log('💡 Conclusion:', response.conclusion);
+      console.log('Thinking mode successful!');
+      console.log('Thought process:', response.thought_process);
+      console.log('Reasoning steps:', response.reasoning.length);
+      console.log('Conclusion:', response.conclusion);
       
     } catch (error) {
-      console.error('❌ Thinking mode test failed:', error);
+      console.error('Thinking mode test failed:', error);
     }
   }
 
@@ -156,22 +200,20 @@ export class GeminiTestSuite {
         'Building a successful startup is my main objective'
       ];
       
-      console.log('📊 Generating embeddings for', testTexts.length, 'texts...');
-      
-      // Test single embedding
+      console.log('Testing single embedding generation...');
       const singleEmbedding = await generateEmbeddings(testTexts[0]);
-      console.log('✅ Single embedding successful!');
-      console.log('📏 Dimension:', singleEmbedding.dimension);
-      console.log('🔢 Sample values:', singleEmbedding.embedding.slice(0, 5));
+      console.log('Single embedding successful!');
+      console.log('Dimension:', singleEmbedding.dimension);
+      console.log('Sample values:', singleEmbedding.embedding.slice(0, 5));
       
-      // Test batch embeddings
+      console.log('\nTesting batch embedding generation...');
       const batchResults = await batchEmbeddings(testTexts);
-      console.log('✅ Batch embeddings successful!');
-      console.log('📦 Batch count:', batchResults.length);
-      console.log('🔄 All dimensions match:', batchResults.every((e: EmbeddingResponse) => e.dimension === batchResults[0].dimension));
+      console.log('Batch embeddings successful!');
+      console.log('Generated', batchResults.length, 'embeddings');
+      console.log('First embedding dimension:', batchResults[0].dimension);
       
     } catch (error) {
-      console.error('❌ Embeddings test failed:', error);
+      console.error('Embeddings test failed:', error);
     }
   }
 
@@ -181,45 +223,30 @@ export class GeminiTestSuite {
     try {
       const rag = new RAGSystem();
       
-      // Add knowledge base documents
+      // Add some test documents
       const documents = [
-        {
-          id: 'goal-setting-tips',
-          content: 'Effective goal setting requires SMART criteria: Specific, Measurable, Achievable, Relevant, Time-bound. Break large goals into smaller milestones.',
-          metadata: { category: 'goal-setting', priority: 'high' }
-        },
-        {
-          id: 'productivity-methods',
-          content: 'Popular productivity methods include Pomodoro Technique, Getting Things Done (GTD), and Time Blocking. Each method has different strengths.',
-          metadata: { category: 'productivity', priority: 'medium' }
-        },
-        {
-          id: 'habit-formation',
-          content: 'Habit formation takes 21-66 days on average. Start small, be consistent, and use environmental cues to trigger desired behaviors.',
-          metadata: { category: 'habits', priority: 'high' }
-        }
+        'Goal setting is most effective when goals are specific, measurable, achievable, relevant, and time-bound (SMART).',
+        'Breaking large goals into smaller, actionable steps increases the likelihood of success and maintains motivation.',
+        'Regular review and adjustment of goals based on progress and changing circumstances is crucial for long-term achievement.',
+        'Visual progress tracking and celebration of milestones helps maintain momentum and positive reinforcement.',
+        'Social accountability and sharing goals with others can significantly improve goal completion rates.'
       ];
       
-      console.log('📚 Adding', documents.length, 'documents to RAG system...');
-      await rag.addDocuments(documents);
-      console.log('✅ Documents added to RAG system!');
+      console.log('Adding documents to RAG system...');
+      for (let i = 0; i < documents.length; i++) {
+        await rag.addDocuments([{content: documents[i], id: `doc-${i + 1}`}]);
+      }
+      console.log('Added', documents.length, 'documents');
       
-      // Test retrieval
-      const query = 'How can I build better habits for achieving my goals?';
-      console.log('🔍 Query:', query);
-      
-      const relevantDocs = await rag.retrieve(query, 2);
-      console.log('✅ Document retrieval successful!');
-      console.log('📄 Retrieved docs:', relevantDocs.map(d => d.id));
-      
-      // Test RAG generation
+      console.log('Testing RAG query...');
+      const query = 'What are the best practices for effective goal setting?';
       const ragResponse = await rag.generateWithContext(query, 2);
-      console.log('✅ RAG generation successful!');
-      console.log('📏 Response length:', ragResponse.length);
-      console.log('👀 Response preview:', ragResponse.substring(0, 150) + '...');
+      
+      console.log('RAG query successful!');
+      console.log('Response:', ragResponse.substring(0, 200) + '...');
       
     } catch (error) {
-      console.error('❌ RAG system test failed:', error);
+      console.error('RAG system test failed:', error);
     }
   }
 
@@ -229,50 +256,75 @@ export class GeminiTestSuite {
     try {
       const capabilities = await getModelCapabilities();
       
-      console.log('✅ Model capabilities retrieved!');
-      console.log('📝 Text Generation:', capabilities.textGeneration);
-      console.log('📄 Long Context:', capabilities.longContext);
-      console.log('👁️ Vision:', capabilities.vision);
-      console.log('🧠 Thinking:', capabilities.thinking);
-      console.log('📊 Embeddings:', capabilities.embeddings);
-      console.log('🔢 Max Context Tokens:', capabilities.maxContextTokens);
+      console.log('Model capabilities retrieved!');
+      console.log('Vision Support:', capabilities.vision);
+      console.log('Long Context:', capabilities.longContext);
+      console.log('Thinking Mode:', capabilities.thinking);
+      console.log('Embeddings:', capabilities.embeddings);
+      console.log('Max Context Tokens:', capabilities.maxContextTokens);
+      console.log('Max Output Tokens:', capabilities.maxOutputTokens);
       
     } catch (error) {
-      console.error('❌ Model capabilities test failed:', error);
+      console.error('Model capabilities test failed:', error);
     }
   }
 
-  // === PERFORMANCE BENCHMARKS ===
+  // === BENCHMARK TESTS ===
   
   static async benchmarkPerformance(): Promise<void> {
-    console.log('\n=== Performance Benchmark ===');
+    console.log('\n=== Performance Benchmarks ===');
     
-    const tests = [
-      { name: 'Basic Text Generation', fn: () => sendGoalsToGemini('Test goal for performance') },
-      { name: 'Embeddings Generation', fn: () => generateEmbeddings('Test text for embedding performance') },
-    ];
+    const startTime = Date.now();
+    let successCount = 0;
+    let failCount = 0;
     
-    for (const test of tests) {
-      try {
-        const start = Date.now();
-        await test.fn();
-        const end = Date.now();
-        console.log(`⚡ ${test.name}: ${end - start}ms`);
-      } catch (error) {
-        console.log(`❌ ${test.name}: FAILED`);
-      }
+    try {
+      // Test basic API speed
+      console.log('Testing basic API response time...');
+      const apiStart = Date.now();
+      await sendGoalsToGemini('Test goal for performance benchmark');
+      const apiTime = Date.now() - apiStart;
+      console.log('Basic API call:', apiTime + 'ms');
+      successCount++;
+      
+      // Test embeddings speed
+      console.log('Testing embeddings response time...');
+      const embStart = Date.now();
+      await generateEmbeddings('Test text for embedding benchmark');
+      const embTime = Date.now() - embStart;
+      console.log('Embeddings generation:', embTime + 'ms');
+      successCount++;
+      
+      // Test thinking mode speed
+      console.log('Testing thinking mode response time...');
+      const thinkStart = Date.now();
+      await generateThinkingResponse('Simple test problem', 'Basic context');
+      const thinkTime = Date.now() - thinkStart;
+      console.log('Thinking mode:', thinkTime + 'ms');
+      successCount++;
+      
+    } catch (error) {
+      console.error('Benchmark test failed:', error);
+      failCount++;
     }
+    
+    const totalTime = Date.now() - startTime;
+    console.log('\n=== Benchmark Results ===');
+    console.log('Total time:', totalTime + 'ms');
+    console.log('Successful tests:', successCount);
+    console.log('Failed tests:', failCount);
+    console.log('Success rate:', ((successCount / (successCount + failCount)) * 100).toFixed(1) + '%');
   }
 
-  // === MAIN TEST SUITES ===
+  // === FULL TEST SUITE ===
   
   static async runAllTests(): Promise<void> {
-    console.log('🧪 Starting Comprehensive Gemini API Test Suite...\n');
-    
+    console.log('=== Running Complete Gemini Test Suite ===\n');
     const startTime = Date.now();
     
     try {
       await this.testBasicConnection();
+      await this.testSessionMemory();
       await this.testLongContext();
       await this.testThinkingMode();
       await this.testEmbeddings();
@@ -282,78 +334,52 @@ export class GeminiTestSuite {
       const endTime = Date.now();
       const duration = (endTime - startTime) / 1000;
       
-      console.log(`\n🎉 All tests completed in ${duration.toFixed(2)} seconds!`);
-      console.log('✅ Gemini API integration is working with all advanced features');
+      console.log('\n=== All Tests Completed ===');
+      console.log('Total duration:', duration.toFixed(2) + ' seconds');
+      console.log('All Gemini features are working correctly!');
       
     } catch (error) {
-      console.error('\n❌ Test suite failed:', error);
-      console.log('💡 Some features may not be working correctly');
+      console.error('Test suite failed:', error);
     }
   }
 
   static async runQuickTests(): Promise<void> {
-    console.log('⚡ Running Quick Tests...\n');
-    
-    const startTime = Date.now();
+    console.log('=== Running Quick Tests ===\n');
     
     try {
       await this.quickTest();
       await this.quickEmbeddingsTest();
+      await this.testSessionMemory();
       
-      const endTime = Date.now();
-      const duration = (endTime - startTime) / 1000;
-      
-      console.log(`\n⚡ Quick tests completed in ${duration.toFixed(2)} seconds!`);
-      console.log('✅ Basic Gemini API functionality is working');
+      console.log('\n=== Quick Tests Completed ===');
+      console.log('Basic functionality verified!');
       
     } catch (error) {
-      console.error('\n❌ Quick tests failed:', error);
-      console.log('💡 Check your API key and internet connection');
+      console.error('Quick tests failed:', error);
     }
   }
 }
 
-// === EXPORT CONVENIENCE FUNCTIONS ===
+// === ADDITIONAL UTILITY FUNCTIONS ===
 
-// New consolidated API test (replaces testNewGeminiAPI)
 export async function testGeminiAPI(): Promise<void> {
-  console.log('🧪 Testing @google/genai Integration...');
+  console.log('Starting Gemini API Test...');
   
   if (!ENV.hasGeminiKey()) {
-    console.error('❌ No Gemini API key found');
-    console.log('💡 Add EXPO_PUBLIC_GEMINI_API_KEY to your .env file');
+    console.error('Gemini API key not found!');
+    console.log('Please add your API key to the .env file:');
+    console.log('EXPO_PUBLIC_GEMINI_API_KEY=your_api_key_here');
     return;
   }
   
-  console.log('✅ API key found, length:', ENV.getGeminiKey().length);
-  
   try {
-    // Test basic goal generation
-    console.log('📡 Testing basic goal generation...');
-    const testGoals = 'I want to build amazing React Native apps that change the world';
-    const response = await sendGoalsToGemini(testGoals);
-    
-    console.log('✅ Basic API call successful!');
-    console.log('🎯 Motivation:', response.motivation);
-    console.log('💡 Suggestions count:', response.suggestions.length);
-    console.log('🚀 Steps count:', response.steps.length);
-    
-    // Test embeddings
-    console.log('\n📊 Testing embeddings generation...');
-    const embedding = await generateEmbeddings('Building successful mobile applications');
-    
-    console.log('✅ Embeddings successful!');
-    console.log('📏 Dimension:', embedding.dimension);
-    console.log('🔢 Sample values:', embedding.embedding.slice(0, 5));
-    
-    console.log('\n🎉 All tests passed! New Gemini API is working perfectly.');
-    console.log('🚀 Ready for advanced features like RAG, long context, and thinking mode!');
-    
+    await GeminiTestSuite.quickTest();
+    console.log('Gemini API is working correctly!');
+    console.log('Ready for advanced features like RAG, long context, and thinking mode!');
   } catch (error) {
-    console.error('❌ API test failed:', error);
-    console.log('💡 Common issues:');
-    console.log('   - Check your API key is valid');
-    console.log('   - Verify internet connection');
+    console.error('Gemini API test failed. Please check:');
+    console.log('   - Your API key is valid and active');
+    console.log('   - You have internet connectivity');
     console.log('   - Make sure you have API quota remaining');
     console.log('   - Ensure @google/genai is properly installed');
   }

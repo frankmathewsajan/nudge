@@ -1,20 +1,23 @@
 import React, { useState } from 'react';
 import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    View,
 } from 'react-native';
 import { AILoadingScreen } from '../components/ui/AILoadingScreen';
+import { AutoScheduler } from '../components/ui/AutoScheduler';
 import { InteractiveGoalsInput } from '../components/ui/InteractiveGoalsInput';
 import { OnboardingFlow } from '../components/ui/OnboardingFlow';
+import { ProductivityDashboard } from '../components/ui/ProductivityDashboard';
+import { SchedulingComplete } from '../components/ui/SchedulingComplete';
 import {
-  BodyText,
-  Container,
-  HeadlineText,
+    BodyText,
+    Container,
+    HeadlineText,
 } from '../components/ui/StyledComponents';
 import { SuccessPlan } from '../components/ui/SuccessPlan';
 import { GoalResponse, sendGoalsToGemini } from '../utils/geminiAI';
@@ -24,6 +27,10 @@ export default function HomeScreen() {
   const [hasGreeted, setHasGreeted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState<GoalResponse | null>(null);
+  const [isScheduling, setIsScheduling] = useState(false);
+  const [schedulingComplete, setSchedulingComplete] = useState(false);
+  const [showProductivityTracker, setShowProductivityTracker] = useState(false);
+  const [currentPlannedTask, setCurrentPlannedTask] = useState<string>();
 
   const handleSendGoals = async () => {
     if (!goals.trim()) {
@@ -54,6 +61,47 @@ export default function HomeScreen() {
   const handleNewGoals = () => {
     setGoals('');
     setAiResponse(null);
+    setIsScheduling(false);
+    setSchedulingComplete(false);
+    setShowProductivityTracker(false);
+    setCurrentPlannedTask(undefined);
+  };
+
+  const handleConfirmPlan = () => {
+    setIsScheduling(true);
+  };
+
+  const handleSchedulingComplete = () => {
+    setIsScheduling(false);
+    setSchedulingComplete(true);
+  };
+
+  const handleBackToHome = () => {
+    setGoals('');
+    setAiResponse(null);
+    setIsScheduling(false);
+    setSchedulingComplete(false);
+    setShowProductivityTracker(false);
+    setCurrentPlannedTask(undefined);
+  };
+
+  const handleStartTracking = () => {
+    setSchedulingComplete(false);
+    setShowProductivityTracker(true);
+    
+    // Extract first task from urgent tasks as current planned task
+    if (aiResponse?.urgent?.length) {
+      setCurrentPlannedTask(aiResponse.urgent[0].task);
+    } else if (aiResponse?.long_term?.length) {
+      setCurrentPlannedTask(aiResponse.long_term[0].task);
+    }
+  };
+
+  const handleScheduleUpdate = (needsUpdate: boolean) => {
+    if (needsUpdate) {
+      // Handle schedule adjustment if needed
+      console.log('Schedule needs adjustment based on productivity feedback');
+    }
   };
 
   // Show onboarding if not greeted
@@ -70,9 +118,44 @@ export default function HomeScreen() {
     return <AILoadingScreen onComplete={() => setIsLoading(false)} />;
   }
 
+  // Show auto-scheduler after plan confirmation
+  if (isScheduling && aiResponse) {
+    return (
+      <AutoScheduler 
+        goals={goals} 
+        response={aiResponse} 
+        onComplete={handleSchedulingComplete} 
+      />
+    );
+  }
+
+  // Show productivity tracker after scheduling complete
+  if (showProductivityTracker) {
+    return (
+      <ProductivityDashboard 
+        userId="default"
+        plannedTask={currentPlannedTask}
+        onScheduleUpdate={handleScheduleUpdate}
+        onBackToGoals={handleBackToHome}
+      />
+    );
+  }
+
+  // Show completion screen after scheduling
+  if (schedulingComplete) {
+    return <SchedulingComplete onBackToHome={handleBackToHome} onStartTracking={handleStartTracking} />;
+  }
+
   // Show success plan if we have a response
   if (aiResponse) {
-    return <SuccessPlan goals={goals} response={aiResponse} onNewGoals={handleNewGoals} />;
+    return (
+      <SuccessPlan 
+        goals={goals} 
+        response={aiResponse} 
+        onNewGoals={handleNewGoals}
+        onConfirmPlan={handleConfirmPlan}
+      />
+    );
   }
 
   // Show goal input screen

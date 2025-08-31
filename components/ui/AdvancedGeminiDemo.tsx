@@ -168,7 +168,7 @@ export const AdvancedGeminiDemo: React.FC = () => {
         ) : (
           <View>
             <BodyText variant="medium">
-              Status: {result.success ? '✅ Success' : '❌ Failed'}
+              Status: {result.success ? 'Success' : 'Failed'}
             </BodyText>
             <BodyText variant="medium">Duration: {result.duration}ms</BodyText>
             
