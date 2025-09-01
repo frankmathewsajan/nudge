@@ -1,3 +1,5 @@
+import { FontAwesome } from '@expo/vector-icons';
+import { MeshGradient } from '@kuss/react-native-mesh-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -149,9 +151,13 @@ export function ProductivityTracker({
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F8F5FF" />
       <SafeAreaView style={styles.container}>
-        <View style={{ paddingTop: insets.top }}>
+        <MeshGradient
+          colors={['#F8F5FF', '#E7E0EC', '#FEF7FF']}
+          style={styles.gradientBackground}
+        />
+        <View style={[styles.content, { paddingTop: insets.top }]}>
           <ScrollView 
             style={styles.scrollView} 
             contentContainerStyle={styles.scrollContent}
@@ -165,33 +171,40 @@ export function ProductivityTracker({
           {/* Today Overview - show when day has started */}
           {(dayStarted || activityHistory.length > 0) && (
             <TodayOverview 
-              activityCount={activityHistory.length}
               onViewDetails={() => setShowReport(true)}
             />
           )}
           
           {/* Hourly Check-in */}
           <View style={styles.checkInSection}>
-            <Text style={styles.checkInTitle}>
-              {currentHour}:00 Check-in
-            </Text>
-            <View style={styles.titleUnderline} />
+            <View style={styles.checkInHeader}>
+              <FontAwesome name="clock-o" size={20} color="#6750A4" style={styles.checkInIcon} />
+              <Text style={styles.checkInTitle}>
+                {currentHour}:00 Check-in
+              </Text>
+            </View>
             
             {plannedTask && (
               <View style={styles.plannedTaskContainer}>
-                <Text style={styles.plannedTaskLabel}>PLANNED TASK</Text>
+                <View style={styles.plannedTaskHeader}>
+                  <FontAwesome name="bullseye" size={16} color="#6750A4" />
+                  <Text style={styles.plannedTaskLabel}>PLANNED TASK</Text>
+                </View>
                 <Text style={styles.plannedTaskText}>{plannedTask}</Text>
               </View>
             )}
 
-            <TextInput
-              style={styles.activityInput}
-              placeholder="What did you accomplish this hour?"
-              value={activity}
-              onChangeText={setActivity}
-              multiline={true}
-              placeholderTextColor="#999"
-            />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.activityInput}
+                placeholder="What did you accomplish this hour?"
+                value={activity}
+                onChangeText={setActivity}
+                multiline={true}
+                placeholderTextColor="#79747E"
+                numberOfLines={3}
+              />
+            </View>
 
             <TouchableOpacity 
               style={[styles.submitButton, (!activity.trim() || isLoading) && styles.disabledButton]}
@@ -199,6 +212,12 @@ export function ProductivityTracker({
               disabled={!activity.trim() || isLoading}
               activeOpacity={0.95}
             >
+              <FontAwesome 
+                name={isLoading ? "spinner" : "paper-plane"} 
+                size={16} 
+                color="#FFFFFF" 
+                style={styles.submitIcon}
+              />
               <Text style={styles.submitButtonText}>
                 {isLoading ? 'Processing...' : 'Submit Activity'}
               </Text>
@@ -344,15 +363,26 @@ export function ProductivityTracker({
 }
 
 const styles = StyleSheet.create({
-  // Base Layout - Matching SuccessPlan
+  // Base Layout - Modern Material Design 3
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Pure white
+    position: 'relative',
+  },
+  gradientBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  content: {
+    flex: 1,
+    position: 'relative',
+    zIndex: 1,
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingHorizontal: 20,
   },
   scrollContent: {
     flexGrow: 1,
@@ -361,190 +391,213 @@ const styles = StyleSheet.create({
   
   // Check-in Section
   checkInSection: {
-    marginBottom: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(231, 224, 236, 0.5)',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  checkInHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(231, 224, 236, 0.5)',
+  },
+  checkInIcon: {
+    marginRight: 8,
   },
   checkInTitle: {
-    fontSize: 42,
-    fontWeight: '300', // Lighter weight for elegance
-    color: '#1A1A1A',
-    marginBottom: 8,
-    letterSpacing: -0.5,
-    fontFamily: 'System', // Will use SF Pro on iOS
-    textAlign: 'center',
-  },
-  titleUnderline: {
-    width: 60,
-    height: 1,
-    backgroundColor: '#D4AF37', // Luxury gold accent
-    marginBottom: 24,
-    alignSelf: 'center',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1D1B20',
+    fontFamily: 'System',
   },
   
   // Planned Task Container
   plannedTaskContainer: {
-    backgroundColor: '#F9F9F9',
-    borderLeftWidth: 3,
-    borderLeftColor: '#D4AF37',
-    padding: 20,
-    borderRadius: 8,
-    marginBottom: 24,
+    backgroundColor: 'rgba(255, 251, 254, 0.8)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: 'rgba(231, 224, 236, 0.5)',
+  },
+  plannedTaskHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   plannedTaskLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#49454F',
     fontWeight: '600',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
-    marginBottom: 8,
+    marginLeft: 8,
   },
   plannedTaskText: {
-    fontSize: 18,
-    color: '#1F2937',
+    fontSize: 16,
+    color: '#1D1B20',
     fontWeight: '500',
     lineHeight: 24,
+    fontFamily: 'System',
   },
   
-  // Activity Input
+  // Input Container
+  inputContainer: {
+    marginBottom: 16,
+  },
   activityInput: {
-    backgroundColor: '#FAFAFA',
-    borderRadius: 8,
-    padding: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 16,
+    padding: 16,
     fontSize: 16,
-    color: '#1A1A1A',
+    color: '#1D1B20',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    marginBottom: 20,
-    minHeight: 100,
+    borderColor: 'rgba(231, 224, 236, 0.5)',
+    minHeight: 80,
     textAlignVertical: 'top',
     fontFamily: 'System',
   },
   
   // Buttons
   submitButton: {
-    backgroundColor: '#D4AF37', // Gold primary action
-    borderRadius: 8,
-    paddingHorizontal: 32,
-    paddingVertical: 18,
+    backgroundColor: '#6750A4',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#B8941F',
-    shadowColor: '#D4AF37',
-    shadowOffset: { width: 0, height: 4 },
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#6750A4',
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 4,
-    marginBottom: 24,
+    shadowRadius: 4,
   },
   disabledButton: {
     opacity: 0.5,
   },
+  submitIcon: {
+    marginRight: 8,
+  },
   submitButtonText: {
-    color: '#1A1A1A',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontFamily: 'System',
   },
   
   // Feedback Container
   feedbackContainer: {
-    padding: 24,
-    borderRadius: 8,
-    marginBottom: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: 'rgba(231, 224, 236, 0.5)',
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   feedbackPositive: {
-    backgroundColor: '#F0FDF4',
+    backgroundColor: 'rgba(232, 245, 233, 0.9)',
     borderLeftWidth: 4,
-    borderLeftColor: '#22C55E',
+    borderLeftColor: '#4CAF50',
   },
   feedbackCorrectiveWrapper: {
-    backgroundColor: '#FFF7ED',
+    backgroundColor: 'rgba(255, 243, 224, 0.9)',
     borderLeftWidth: 4,
-    borderLeftColor: '#F97316',
+    borderLeftColor: '#FF9800',
   },
   feedbackNeutral: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: 'rgba(243, 241, 255, 0.9)',
     borderLeftWidth: 4,
-    borderLeftColor: '#6366F1',
+    borderLeftColor: '#6750A4',
   },
   feedbackMessage: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: '#1D1B20',
     marginBottom: 12,
     lineHeight: 24,
+    fontFamily: 'System',
   },
   suggestionsContainer: {
     marginTop: 12,
   },
   suggestionsLabel: {
     fontSize: 12,
-    color: '#6B7280',
+    color: '#49454F',
     fontWeight: '600',
     letterSpacing: 0.5,
     textTransform: 'uppercase',
     marginBottom: 12,
   },
   suggestionText: {
-    fontSize: 16,
-    color: '#374151',
+    fontSize: 14,
+    color: '#1D1B20',
     marginBottom: 8,
-    lineHeight: 22,
+    lineHeight: 20,
+    fontFamily: 'System',
   },
   adjustmentText: {
-    fontSize: 16,
-    color: '#1F2937',
+    fontSize: 14,
+    color: '#1D1B20',
     fontWeight: '600',
     marginTop: 12,
     padding: 16,
-    backgroundColor: '#FEF3C7',
-    borderRadius: 6,
+    backgroundColor: 'rgba(255, 248, 225, 0.9)',
+    borderRadius: 12,
     borderLeftWidth: 3,
-    borderLeftColor: '#F59E0B',
+    borderLeftColor: '#FF9800',
   },
   
   // Report Button
   reportButton: {
-    backgroundColor: '#6366F1',
-    borderRadius: 8,
-    paddingHorizontal: 32,
-    paddingVertical: 18,
+    backgroundColor: '#6750A4',
+    borderRadius: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 16,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#4F46E5',
-    shadowColor: '#6366F1',
+    elevation: 2,
+    shadowColor: '#6750A4',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 3,
-    marginBottom: 24,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    marginBottom: 20,
   },
   reportButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
+    fontFamily: 'System',
   },
   
   // Report Container
   reportContainer: {
-    backgroundColor: '#FAFAFA',
-    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: 'rgba(231, 224, 236, 0.5)',
     overflow: 'hidden',
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
-    elevation: 4,
-    maxHeight: '80%', // Allow report to take most of screen
-    minHeight: 300,   // Ensure minimum height
+    maxHeight: '80%',
+    minHeight: 300,
     marginTop: 20,
   },
   reportHeader: {

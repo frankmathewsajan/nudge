@@ -179,6 +179,34 @@ async function cancelProductivityNotifications(): Promise<void> {
 }
 
 /**
+ * Platform-specific notification scheduling helper
+ */
+function createScheduleTrigger(hour: number, minute: number = 0): Notifications.NotificationTriggerInput {
+  if (Platform.OS === 'ios') {
+    // iOS supports calendar triggers
+    return {
+      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+      hour,
+      minute,
+      repeats: false,
+    } as Notifications.CalendarTriggerInput;
+  } else {
+    // Android uses time interval
+    const now = new Date();
+    const targetTime = new Date();
+    targetTime.setHours(hour, minute, 0, 0);
+    
+    const secondsUntilTarget = Math.max(0, (targetTime.getTime() - now.getTime()) / 1000);
+    
+    return {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: Math.round(secondsUntilTarget),
+      channelId: 'productivity',
+    } as Notifications.TimeIntervalTriggerInput;
+  }
+}
+
+/**
  * Schedule notifications only for awake hours
  */
 async function scheduleAwakeHourNotifications(): Promise<void> {
@@ -193,28 +221,31 @@ async function scheduleAwakeHourNotifications(): Promise<void> {
     const endHour = 22; // 10 PM
     
     for (let hour = Math.max(currentHour + 1, 7); hour <= endHour; hour++) {
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: `${hour}:00 Productivity Check-in`,
-          body: "Take a moment to reflect on your last hour. What did you accomplish?",
-          data: { 
-            type: 'hourly_checkin',
-            hour,
-            timestamp: Date.now()
+      // Calculate if this hour is still in the future
+      const targetTime = new Date();
+      targetTime.setHours(hour, 0, 0, 0);
+      
+      // Only schedule if the target time is in the future
+      if (targetTime.getTime() > now.getTime()) {
+        const trigger = createScheduleTrigger(hour, 0);
+        
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: `${hour}:00 Productivity Check-in`,
+            body: "Take a moment to reflect on your last hour. What did you accomplish?",
+            data: { 
+              type: 'hourly_checkin',
+              hour,
+              timestamp: Date.now()
+            },
+            categoryIdentifier: 'PRODUCTIVITY_ACTION',
+            badge: 1,
+            sound: 'default',
+            priority: Platform.OS === 'android' ? 'high' : undefined,
           },
-          categoryIdentifier: 'PRODUCTIVITY_ACTION',
-          badge: 1,
-          sound: 'default',
-          priority: Platform.OS === 'android' ? 'high' : undefined,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-          hour,
-          minute: 0,
-          repeats: false, // Only for today
-          channelId: Platform.OS === 'android' ? 'productivity' : undefined,
-        },
-      });
+          trigger,
+        });
+      }
     }
     
     console.log(`Scheduled productivity notifications from ${Math.max(currentHour + 1, 7)}:00 to ${endHour}:00`);

@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import config from '../tamagui.config';
+import { initializeSampleData } from '../utils/activityData';
 import { handleNotificationResponse, setupNotificationCategories } from '../utils/notifications';
 import { initializeSleepState } from '../utils/sleepState';
 
@@ -51,13 +52,14 @@ export default function RootLayout() {
     // Set up notification categories and initialize sleep state
     setupNotificationCategories();
     initializeSleepState();
+    initializeSampleData();
   }, []);
 
   return (
     <SafeAreaProvider>
       <TamaguiProvider config={config}>
         <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         </Stack>
         <StatusBar style="auto" />
       </TamaguiProvider>

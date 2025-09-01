@@ -5,6 +5,7 @@
 
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { logProductivityCheckin } from './activityData';
 
 // Configure notification handler - updated for latest SDK
 Notifications.setNotificationHandler({
@@ -15,6 +16,34 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+/**
+ * Platform-specific notification scheduling helper
+ */
+function createPlatformScheduleTrigger(hour: number, minute: number = 0): Notifications.NotificationTriggerInput {
+  if (Platform.OS === 'ios') {
+    // iOS supports calendar triggers
+    return {
+      type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+      hour,
+      minute,
+      repeats: false,
+    } as Notifications.CalendarTriggerInput;
+  } else {
+    // Android uses time interval
+    const now = new Date();
+    const targetTime = new Date();
+    targetTime.setHours(hour, minute, 0, 0);
+    
+    const secondsUntilTarget = Math.max(0, (targetTime.getTime() - now.getTime()) / 1000);
+    
+    return {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: Math.round(secondsUntilTarget),
+      channelId: 'productivity',
+    } as Notifications.TimeIntervalTriggerInput;
+  }
+}
 
 /**
  * Request notification permissions with latest SDK patterns
@@ -131,29 +160,34 @@ export async function scheduleHourlyReminders(): Promise<void> {
   let scheduledCount = 0;
   
   for (let hour = Math.max(currentHour + 1, 7); hour <= endHour; hour++) {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: `${hour}:00 Productivity Check-in`,
-        body: "Take a moment to reflect on your last hour. What did you accomplish?",
-        data: { 
-          type: 'hourly_checkin',
-          hour,
-          timestamp: Date.now()
+    // Calculate seconds until the target hour
+    const targetTime = new Date();
+    targetTime.setHours(hour, 0, 0, 0);
+    
+    const secondsUntilTarget = Math.max(0, (targetTime.getTime() - now.getTime()) / 1000);
+    
+    // Only schedule if the target time is in the future
+    if (secondsUntilTarget > 0) {
+      const trigger = createPlatformScheduleTrigger(hour, 0);
+      
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: `${hour}:00 Productivity Check-in`,
+          body: "Take a moment to reflect on your last hour. What did you accomplish?",
+          data: { 
+            type: 'hourly_checkin',
+            hour,
+            timestamp: Date.now()
+          },
+          categoryIdentifier: 'PRODUCTIVITY_ACTION',
+          badge: 1,
+          sound: 'default',
+          priority: Platform.OS === 'android' ? 'high' : undefined,
         },
-        categoryIdentifier: 'PRODUCTIVITY_ACTION',
-        badge: 1,
-        sound: 'default',
-        priority: Platform.OS === 'android' ? 'high' : undefined,
-      },
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-        hour,
-        minute: 0,
-        repeats: false, // Only for today
-        channelId: Platform.OS === 'android' ? 'productivity' : undefined,
-      },
-    });
-    scheduledCount++;
+        trigger,
+      });
+      scheduledCount++;
+    }
   }
   
   console.log(`Scheduled ${scheduledCount} hourly reminders from ${Math.max(currentHour + 1, 7)}:00 to ${endHour}:00`);
@@ -201,6 +235,7 @@ export function handleNotificationResponse(response: Notifications.NotificationR
   switch (actionIdentifier) {
     case 'QUICK_LOG':
       // Navigate to productivity tracker
+      console.log('Opening app for quick logging');
       break;
     case 'REMIND_LATER':
       // Schedule reminder in 30 minutes
@@ -219,13 +254,17 @@ export function handleNotificationResponse(response: Notifications.NotificationR
           channelId: Platform.OS === 'android' ? 'productivity' : undefined,
         },
       });
+      console.log('Notification snoozed for 30 minutes');
       break;
     case 'MARK_PRODUCTIVE':
-      // Mark current hour as productive
-      console.log('Marked as productive');
+      // Mark current hour as productive and log to activity data
+      const hour = (notificationData as any)?.hour || new Date().getHours();
+      logProductivityCheckin('Marked as productive via notification', hour);
+      console.log('Marked as productive and logged to activity data');
       break;
     default:
       // Default tap - open app
+      console.log('Notification tapped - opening app');
       break;
   }
 }
