@@ -113,11 +113,24 @@ export async function scheduleTestNotification(): Promise<void> {
 export async function scheduleHourlyReminders(): Promise<void> {
   await registerForPushNotificationsAsync();
   
-  // Cancel existing notifications
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  // Cancel existing productivity notifications
+  const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+  const productivityNotifications = scheduledNotifications.filter(
+    notification => notification.content.data?.type === 'hourly_checkin'
+  );
   
-  // Schedule notifications for working hours (9 AM to 6 PM)
-  for (let hour = 9; hour <= 18; hour++) {
+  for (const notification of productivityNotifications) {
+    await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+  }
+  
+  const now = new Date();
+  const currentHour = now.getHours();
+  
+  // Schedule notifications for remaining hours of the day (until 10 PM)
+  const endHour = 22; // 10 PM
+  let scheduledCount = 0;
+  
+  for (let hour = Math.max(currentHour + 1, 7); hour <= endHour; hour++) {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: `${hour}:00 Productivity Check-in`,
@@ -136,13 +149,14 @@ export async function scheduleHourlyReminders(): Promise<void> {
         type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
         hour,
         minute: 0,
-        repeats: true,
+        repeats: false, // Only for today
         channelId: Platform.OS === 'android' ? 'productivity' : undefined,
       },
     });
+    scheduledCount++;
   }
   
-  console.log('Scheduled hourly reminders for working hours (9 AM - 6 PM)');
+  console.log(`Scheduled ${scheduledCount} hourly reminders from ${Math.max(currentHour + 1, 7)}:00 to ${endHour}:00`);
 }
 
 /**

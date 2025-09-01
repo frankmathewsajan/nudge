@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
-    cancelAllNotifications,
-    getScheduledNotificationsCount,
-    scheduleTestNotification,
-    setupNotificationCategories
+  cancelAllNotifications,
+  getScheduledNotificationsCount,
+  scheduleTestNotification,
+  setupNotificationCategories
 } from '../../utils/notifications';
 import { ProductivityTracker } from './ProductivityTracker';
+import { SleepControl } from './SleepControl';
 
 interface ProductivityDashboardProps {
   userId?: string;
@@ -135,6 +136,9 @@ export function ProductivityDashboard({
             <View style={styles.settingsContainer}>
               <Text style={styles.settingsTitle}>Settings & Preferences</Text>
               <View style={styles.titleUnderline} />
+              
+              {/* Sleep/Wake Control Section */}
+              <SleepControl onSleepStateChange={updateNotificationCount} />
               
               {/* Notification Testing Section */}
               <View style={styles.notificationSection}>

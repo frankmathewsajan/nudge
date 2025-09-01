@@ -1,25 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Animated,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { DailyReport, ProductivityFeedback } from '../../utils/geminiAI';
 import { generateDailyReport, processHourlyActivity } from '../../utils/geminiAI';
 import {
-    addActivityToCache,
-    cacheReport,
-    generateInputHash,
-    getCachedActivities,
-    getCachedReport
+  addActivityToCache,
+  cacheReport,
+  generateInputHash,
+  getCachedActivities,
+  getCachedReport
 } from '../../utils/insightCache';
+import { StartDay } from './StartDay';
+import { TodayOverview } from './TodayOverview';
 
 interface ProductivityTrackerProps {
   userId?: string;
@@ -40,6 +42,7 @@ export function ProductivityTracker({
   const [currentHour] = useState(new Date().getHours());
   const [lastReportHash, setLastReportHash] = useState<string>('');
   const [isReportCached, setIsReportCached] = useState(false);
+  const [dayStarted, setDayStarted] = useState(false);
   
   const feedbackAnimation = useRef(new Animated.Value(0)).current;
   const reportAnimation = useRef(new Animated.Value(0)).current;
@@ -147,12 +150,26 @@ export function ProductivityTracker({
   return (
     <>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-      <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
-        <ScrollView 
-          style={styles.scrollView} 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
+      <SafeAreaView style={styles.container}>
+        <View style={{ paddingTop: insets.top }}>
+          <ScrollView 
+            style={styles.scrollView} 
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+          {/* Start Day Component - only show if day hasn't started */}
+          {!dayStarted && activityHistory.length === 0 && (
+            <StartDay onDayStarted={() => setDayStarted(true)} />
+          )}
+
+          {/* Today Overview - show when day has started */}
+          {(dayStarted || activityHistory.length > 0) && (
+            <TodayOverview 
+              activityCount={activityHistory.length}
+              onViewDetails={() => setShowReport(true)}
+            />
+          )}
+          
           {/* Hourly Check-in */}
           <View style={styles.checkInSection}>
             <Text style={styles.checkInTitle}>
@@ -320,6 +337,7 @@ export function ProductivityTracker({
             </Animated.View>
           )}
         </ScrollView>
+        </View>
       </SafeAreaView>
     </>
   );

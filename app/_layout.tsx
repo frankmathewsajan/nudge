@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import config from '../tamagui.config';
 import { handleNotificationResponse, setupNotificationCategories } from '../utils/notifications';
+import { initializeSleepState } from '../utils/sleepState';
 
 // Hook for observing notification events - following latest SDK pattern
 function useNotificationObserver() {
@@ -47,8 +48,9 @@ export default function RootLayout() {
   useNotificationObserver();
 
   useEffect(() => {
-    // Set up notification categories
+    // Set up notification categories and initialize sleep state
     setupNotificationCategories();
+    initializeSleepState();
   }, []);
 
   return (
