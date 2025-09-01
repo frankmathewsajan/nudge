@@ -1,5 +1,5 @@
 import { FontAwesome } from '@expo/vector-icons';
-import { MeshGradient } from '@kuss/react-native-mesh-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
     StyleSheet,
@@ -76,9 +76,9 @@ export function TodayOverview({ onViewDetails }: TodayOverviewProps) {
 
   return (
     <View style={styles.container}>
-      <MeshGradient
+      <LinearGradient
         style={styles.gradientBackground}
-        colors={['#E8F5E8', '#FFFFFF', '#F3F0F8']}
+        colors={['#1A0E3D', '#4C1D95', '#7C3AED', '#A855F7']}
       />
       
       <View style={styles.content}>
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: 'hidden',
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: '#3C2A21',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -169,13 +169,13 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1D1B20',
+    color: '#3C2A21', // Rich brown text
     marginBottom: 4,
     fontFamily: 'System',
   },
   timeText: {
     fontSize: 14,
-    color: '#49454F',
+    color: '#6B5B73', // Muted lavender
     fontFamily: 'System',
   },
   statsContainer: {
@@ -192,13 +192,13 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#6750A4',
+    color: '#6B5B73',
     marginBottom: 4,
     fontFamily: 'System',
   },
   statLabel: {
     fontSize: 12,
-    color: '#49454F',
+    color: '#3C2A21',
     textAlign: 'center',
     fontFamily: 'System',
     flexWrap: 'wrap',
@@ -224,25 +224,25 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    color: '#1D1B20',
+    color: '#3C2A21',
     fontWeight: '500',
     fontFamily: 'System',
     flexShrink: 1,
   },
   detailsButton: {
-    backgroundColor: '#6750A4',
+    backgroundColor: '#C8A882', // Warm beige
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 20,
     alignItems: 'center',
     elevation: 2,
-    shadowColor: '#6750A4',
+    shadowColor: '#3C2A21',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
   detailsButtonText: {
-    color: '#FFFFFF',
+    color: '#3C2A21', // Rich brown
     fontSize: 14,
     fontWeight: '600',
     fontFamily: 'System',

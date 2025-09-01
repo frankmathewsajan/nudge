@@ -50,7 +50,7 @@ export class AsyncStorageUtils {
   /**
    * Get object value with JSON parsing
    */
-  static async getObject<T = any>(key: string): Promise<T | null> {
+  static async getObject<T>(key: string): Promise<T | null> {
     try {
       const jsonValue = await AsyncStorage.getItem(key);
       return jsonValue != null ? JSON.parse(jsonValue) : null;
@@ -61,7 +61,7 @@ export class AsyncStorageUtils {
   }
 
   /**
-   * Remove item with error handling
+   * Remove item by key
    */
   static async removeItem(key: string): Promise<boolean> {
     try {
@@ -74,25 +74,25 @@ export class AsyncStorageUtils {
   }
 
   /**
-   * Clear all data with error handling
+   * Check if key exists
    */
-  static async clear(): Promise<boolean> {
+  static async hasKey(key: string): Promise<boolean> {
     try {
-      await AsyncStorage.clear();
-      return true;
+      const value = await AsyncStorage.getItem(key);
+      return value !== null;
     } catch (error) {
-      console.error('Error clearing AsyncStorage:', error);
+      console.error(`Error checking key ${key}:`, error);
       return false;
     }
   }
 
   /**
-   * Get all keys with error handling
+   * Get all stored keys
    */
   static async getAllKeys(): Promise<string[]> {
     try {
       const keys = await AsyncStorage.getAllKeys();
-      return [...keys]; // Convert readonly array to mutable array
+      return [...keys]; // Convert readonly array to mutable
     } catch (error) {
       console.error('Error getting all keys:', error);
       return [];
@@ -100,17 +100,14 @@ export class AsyncStorageUtils {
   }
 
   /**
-   * Check if AsyncStorage is available
+   * Clear all data
    */
-  static async isAvailable(): Promise<boolean> {
+  static async clear(): Promise<boolean> {
     try {
-      const testKey = '__asyncstorage_test__';
-      await AsyncStorage.setItem(testKey, 'test');
-      const testValue = await AsyncStorage.getItem(testKey);
-      await AsyncStorage.removeItem(testKey);
-      return testValue === 'test';
+      await AsyncStorage.clear();
+      return true;
     } catch (error) {
-      console.warn('AsyncStorage is not available:', error);
+      console.error('Error clearing storage:', error);
       return false;
     }
   }
@@ -154,6 +151,22 @@ export class AsyncStorageUtils {
       return true;
     } catch (error) {
       console.error('Error in multiRemove:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if AsyncStorage is available
+   */
+  static async isAvailable(): Promise<boolean> {
+    try {
+      const testKey = '__asyncstorage_test__';
+      await AsyncStorage.setItem(testKey, 'test');
+      const testValue = await AsyncStorage.getItem(testKey);
+      await AsyncStorage.removeItem(testKey);
+      return testValue === 'test';
+    } catch (error) {
+      console.warn('AsyncStorage is not available:', error);
       return false;
     }
   }

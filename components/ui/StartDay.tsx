@@ -1,5 +1,5 @@
 import { FontAwesome } from '@expo/vector-icons';
-import { MeshGradient } from '@kuss/react-native-mesh-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -189,9 +189,9 @@ export function StartDay({ onDayStarted }: StartDayProps) {
 
   return (
     <View style={styles.container}>
-      <MeshGradient
+      <LinearGradient
         style={styles.gradientBackground}
-        colors={['#6750A4', '#E7E0EC', '#FFFBFE']}
+        colors={['#1A0E3D', '#4C1D95', '#7C3AED', '#A855F7']}
       />
       
       <View style={styles.content}>
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     overflow: 'hidden',
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: '#3C2A21',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -293,20 +293,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1D1B20',
+    color: '#3C2A21', // Rich brown text
     marginBottom: 8,
     fontFamily: 'System',
   },
   subtitle: {
     fontSize: 14,
-    color: '#49454F',
+    color: '#6B5B73', // Muted lavender
     textAlign: 'center',
     fontFamily: 'System',
     marginBottom: 4,
   },
   timeText: {
     fontSize: 12,
-    color: '#6750A4',
+    color: '#8B7355', // Warm brown
     fontWeight: '500',
     fontFamily: 'System',
   },
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
   },
   readySubtitle: {
     fontSize: 14,
-    color: '#49454F',
+    color: '#3C2A21', // Rich brown
     lineHeight: 20,
     fontFamily: 'System',
   },
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6750A4',
+    color: '#6B5B73', // Muted lavender
     marginBottom: 12,
     fontFamily: 'System',
   },
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 13,
-    color: '#49454F',
+    color: '#3C2A21', // Rich brown
     fontFamily: 'System',
     flex: 1,
     flexWrap: 'wrap',
@@ -435,13 +435,13 @@ const styles = StyleSheet.create({
   completedTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1D1B20',
+    color: '#3C2A21', // Rich brown
     marginBottom: 8,
     fontFamily: 'System',
   },
   completedSubtitle: {
     fontSize: 14,
-    color: '#49454F',
+    color: '#6B5B73', // Muted lavender
     textAlign: 'center',
     fontFamily: 'System',
   },

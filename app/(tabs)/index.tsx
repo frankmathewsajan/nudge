@@ -35,7 +35,7 @@ export default function HomeScreen() {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 72 }]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFBFE" translucent />
+      <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" translucent />
       <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           
@@ -118,7 +118,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFBFE',
+    backgroundColor: '#F7F3F0', // Elegant beige base
   },
   scrollContainer: {
     flex: 1,
@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#1D1B20',
+    color: '#3C2A21', // Rich brown text
     marginBottom: 4,
     fontFamily: 'System',
   },
   subtitle: {
     fontSize: 16,
-    color: '#49454F',
+    color: '#8B7355', // Warm brown
     fontWeight: '400',
     fontFamily: 'System',
   },

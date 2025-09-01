@@ -1,5 +1,5 @@
 import { FontAwesome } from '@expo/vector-icons';
-import { MeshGradient } from '@kuss/react-native-mesh-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
     Alert,
@@ -224,11 +224,11 @@ export default function TrackScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" />
       
-      {/* Beautiful Gradient Background */}
-      <MeshGradient
-        colors={['#F8F9FA', '#E8F0FE', '#F3E5F5']}
+      {/* Elegant Beige/Lavender Gradient Background */}
+      <LinearGradient
+        colors={['#F7F3F0', '#F0EBE5', '#E8E1D9', '#F5F0F0']}
         style={styles.gradientBackground}
       />
       
@@ -419,12 +419,12 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1D1B20',
+    color: '#3C2A21', // Rich brown for elegant contrast
     fontFamily: 'System',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#49454F',
+    color: '#8B7355', // Warm brown
     fontWeight: '400',
     fontFamily: 'System',
   },
@@ -488,9 +488,9 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   weekDayText: {
-    fontSize: 12,
+    fontSize: 10, // Reduced from 12 to 10
     fontWeight: '600',
-    color: '#49454F',
+    color: '#8B7355', // Warm brown for elegant theme
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     fontFamily: 'System',
@@ -498,15 +498,16 @@ const styles = StyleSheet.create({
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 24,
+    marginBottom: 20,
+    paddingHorizontal: 4,
   },
   dayCell: {
-    width: width / 7 - 20,
-    height: 48,
+    width: width / 7 - 12, // Reduced from 20 to 12
+    height: 36, // Reduced from 48 to 36
     justifyContent: 'center',
     alignItems: 'center',
-    marginVertical: 2,
-    borderRadius: 24,
+    marginVertical: 1, // Reduced from 2 to 1
+    borderRadius: 18, // Reduced from 24 to 18
   },
   dayCellContent: {
     justifyContent: 'center',
@@ -531,13 +532,13 @@ const styles = StyleSheet.create({
     borderColor: '#4CAF50',
   },
   dayText: {
-    fontSize: 16,
+    fontSize: 13, // Reduced from 16 to 13
     fontWeight: '500',
-    color: '#1D1B20',
+    color: '#3C2A21', // Rich brown for elegant theme
     fontFamily: 'System',
   },
   dayTextInactive: {
-    color: '#9E9E9E',
+    color: '#B8A082', // Muted beige
   },
   dayTextToday: {
     color: '#FFFFFF',

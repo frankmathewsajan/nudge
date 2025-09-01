@@ -6,20 +6,20 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#6750A4',
-        tabBarInactiveTintColor: '#49454F',
+        tabBarActiveTintColor: '#DDD6FE', // Light purple for active tabs
+        tabBarInactiveTintColor: '#8B5CF6', // Medium purple for inactive tabs
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#FFFBFE',
+          backgroundColor: '#1A0E3D', // Dark luxurious background
           borderBottomWidth: 1,
-          borderBottomColor: '#E7E0EC',
+          borderBottomColor: '#4C1D95', // Purple border
           paddingTop: 8,
           paddingBottom: 8,
           height: 72,
           elevation: 2,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
+          shadowOpacity: 0.3,
           shadowRadius: 4,
         },
         tabBarLabelStyle: {
@@ -65,6 +65,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <FontAwesome 
               name="bullseye" 
+              size={24} 
+              color={color} 
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Settings',
+          tabBarIcon: ({ color, size, focused }) => (
+            <FontAwesome 
+              name="cog" 
               size={24} 
               color={color} 
             />

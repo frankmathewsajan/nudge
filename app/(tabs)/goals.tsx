@@ -1,5 +1,5 @@
 import { FontAwesome } from '@expo/vector-icons';
-import { MeshGradient } from '@kuss/react-native-mesh-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
   Alert,
@@ -172,8 +172,8 @@ export default function GoalsScreen() {
 
   const renderGoalCard = (goal: Goal) => (
     <View key={goal.id} style={styles.goalCard}>
-      <MeshGradient
-        colors={['#F8F5FF', '#E8EAFF', '#F0F2FF', '#E8F0FE']}
+      <LinearGradient
+        colors={['rgba(255, 255, 255, 0.9)', 'rgba(248, 245, 255, 0.6)']}
         style={styles.goalCardGradient}
       />
       
@@ -254,9 +254,9 @@ export default function GoalsScreen() {
         style={styles.container} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
-        <MeshGradient
-          colors={['#F8F9FA', '#E8F0FE', '#F3E5F5']}
+        <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" />
+        <LinearGradient
+          colors={['#F7F3F0', '#F0EBE5', '#E8E1D9', '#F5F0F0']}
           style={styles.gradientBackground}
         />
         
@@ -361,10 +361,10 @@ export default function GoalsScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F9FA" />
+      <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" />
       
-      <MeshGradient
-        colors={['#F8F9FA', '#E8F0FE', '#F3E5F5']}
+      <LinearGradient
+        colors={['#F7F3F0', '#F0EBE5', '#E8E1D9', '#F5F0F0']}
         style={styles.gradientBackground}
       />
       
@@ -382,7 +382,7 @@ export default function GoalsScreen() {
           <View style={styles.headerContent}>
             <View style={styles.headerLeft}>
               <View style={styles.iconContainer}>
-                <FontAwesome name="bullseye" size={24} color="#6750A4" />
+                <FontAwesome name="bullseye" size={24} color="#F59E0B" />
               </View>
               <View>
                 <Text style={styles.headerTitle}>My Goals</Text>
@@ -391,12 +391,26 @@ export default function GoalsScreen() {
                 </Text>
               </View>
             </View>
-            <TouchableOpacity 
-              style={styles.addGoalButton}
-              onPress={() => setShowAddGoal(true)}
-            >
-              <FontAwesome name="plus" size={16} color="#FFFFFF" />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity 
+                style={styles.refineButton}
+                onPress={() => {
+                  Alert.alert(
+                    'Refine Goals with AI',
+                    'This feature will help you refine your goals using AI. Coming soon!',
+                    [{ text: 'OK' }]
+                  );
+                }}
+              >
+                <FontAwesome name="magic" size={14} color="#FFFFFF" />
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.addGoalButton}
+                onPress={() => setShowAddGoal(true)}
+              >
+                <FontAwesome name="plus" size={16} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -471,24 +485,42 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1D1B20',
+    color: '#3C2A21', // Rich brown for elegant theme
     fontFamily: 'System',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#49454F',
+    color: '#8B7355', // Warm brown
     fontWeight: '400',
     fontFamily: 'System',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  refineButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#8B5CF6', // Purple for AI feature
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 2,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   addGoalButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#6750A4',
+    backgroundColor: '#F59E0B', // Luxurious gold accent
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 2,
-    shadowColor: '#6750A4',
+    shadowColor: '#F59E0B',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

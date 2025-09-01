@@ -1,5 +1,5 @@
 import { FontAwesome } from '@expo/vector-icons';
-import { MeshGradient } from '@kuss/react-native-mesh-gradient';
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -151,10 +151,10 @@ export function ProductivityTracker({
 
   return (
     <>
-      <StatusBar barStyle="dark-content" backgroundColor="#F8F5FF" />
+      <StatusBar barStyle="light-content" backgroundColor="#1A0E3D" />
       <SafeAreaView style={styles.container}>
-        <MeshGradient
-          colors={['#F8F5FF', '#E7E0EC', '#FEF7FF']}
+        <LinearGradient
+          colors={['#1A0E3D', '#4C1D95', '#7C3AED', '#A855F7']}
           style={styles.gradientBackground}
         />
         <View style={[styles.content, { paddingTop: insets.top }]}>
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
   checkInTitle: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1D1B20',
+    color: '#3C2A21', // Rich brown
     fontFamily: 'System',
   },
   
