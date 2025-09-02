@@ -14,7 +14,7 @@ import { OnboardingFlow } from '../../components/ui/OnboardingFlow';
 import { TodayOverview } from '../../components/ui/TodayOverview';
 import { AsyncStorageUtils } from '../../utils/asyncStorage';
 import { formatGoalsText, saveGoals } from '../../utils/goalsStorage';
-import { hasInternetAccess, isNetworkError, getNetworkErrorMessage } from '../../utils/networkUtils';
+import { hasInternetAccess, isNetworkError } from '../../utils/networkUtils';
 
 export default function HomeScreen() {
   const [sleepState, setSleepState] = useState(false);
