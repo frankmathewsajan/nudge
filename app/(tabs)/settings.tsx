@@ -1,5 +1,6 @@
 import { FontAwesome } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
     Alert,
@@ -13,14 +14,21 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FloatingNavigation } from '../../components/ui/FloatingNavigation';
+import { getAllActivityData } from '../../utils/activityData';
 import { AsyncStorageUtils } from '../../utils/asyncStorage';
+import { getCurrentGoals, getGoalsHistory } from '../../utils/goalsStorage';
+import { getCacheStats } from '../../utils/insightCache';
+import { getSleepState, getSleepStats } from '../../utils/sleepState';
 
 export default function SettingsScreen() {
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
   const [rawData, setRawData] = useState<any>({});
+  const [isDeveloperMode, setIsDeveloperMode] = useState(false);
+  const [structuredData, setStructuredData] = useState<any>({});
   const [isLoading, setIsLoading] = useState(false);
   const insets = useSafeAreaInsets();
+  const router = useRouter();
 
   useEffect(() => {
     loadAllData();
@@ -42,24 +50,39 @@ export default function SettingsScreen() {
   const loadAllData = async () => {
     setIsLoading(true);
     try {
-      const keys = [
-        'user_goals',
-        'day_started_',
-        'activity_data',
-        'user_preferences',
-        'notification_settings',
-        'sleep_data',
-        'productivity_data'
-      ];
-      
+      // Load structured data from each service
+      const structured = {
+        activityData: await getAllActivityData(),
+        sleepState: await getSleepState(),
+        sleepStats: await getSleepStats(),
+        currentGoals: await getCurrentGoals(),
+        goalsHistory: await getGoalsHistory(),
+        cacheStats: getCacheStats(),
+        asyncStorageAvailable: await AsyncStorageUtils.isAvailable(),
+      };
+      setStructuredData(structured);
+
+      // Load raw AsyncStorage data
       const data: any = {};
       
       // Get all AsyncStorage keys
       const allKeys = await AsyncStorageUtils.getAllKeys();
       
       for (const key of allKeys) {
-        const value = await AsyncStorageUtils.getString(key);
-        data[key] = value ? JSON.parse(value) : value;
+        try {
+          const value = await AsyncStorageUtils.getString(key);
+          if (value) {
+            try {
+              data[key] = JSON.parse(value);
+            } catch {
+              data[key] = value; // Store as string if not JSON
+            }
+          } else {
+            data[key] = null;
+          }
+        } catch (error) {
+          data[key] = `Error reading key: ${error}`;
+        }
       }
       
       setRawData(data);
@@ -89,8 +112,8 @@ export default function SettingsScreen() {
                   {
                     text: 'OK',
                     onPress: () => {
-                      // Refresh the data display
-                      loadAllData();
+                      // Navigate to home to trigger onboarding flow
+                      router.push('/(tabs)');
                     }
                   }
                 ]
@@ -169,6 +192,26 @@ export default function SettingsScreen() {
               <FontAwesome name="chevron-right" size={16} color="#8B5CF6" />
             </TouchableOpacity>
 
+            <TouchableOpacity 
+              style={[styles.settingItem, isDeveloperMode && styles.activeItem]} 
+              onPress={() => setIsDeveloperMode(!isDeveloperMode)}
+            >
+              <View style={styles.settingIconContainer}>
+                <FontAwesome name="code" size={20} color="#F59E0B" />
+              </View>
+              <View style={styles.settingContent}>
+                <Text style={styles.settingTitle}>Developer Mode</Text>
+                <Text style={styles.settingSubtitle}>
+                  {isDeveloperMode ? 'Hide raw data view' : 'Show structured data inspection'}
+                </Text>
+              </View>
+              <FontAwesome 
+                name={isDeveloperMode ? "toggle-on" : "toggle-off"} 
+                size={20} 
+                color={isDeveloperMode ? "#10B981" : "#6B7280"} 
+              />
+            </TouchableOpacity>
+
             <TouchableOpacity style={styles.settingItem} onPress={exportData}>
               <View style={styles.settingIconContainer}>
                 <FontAwesome name="download" size={20} color="#F59E0B" />
@@ -192,9 +235,100 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
 
+          {/* Developer Mode - Structured Data */}
+          {isDeveloperMode && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>📊 Structured Data Overview</Text>
+              
+              {/* Storage Stats */}
+              <View style={styles.devCard}>
+                <Text style={styles.devCardTitle}>Storage Status</Text>
+                <Text style={styles.devText}>
+                  AsyncStorage Available: {structuredData.asyncStorageAvailable ? '✅' : '❌'}
+                </Text>
+                <Text style={styles.devText}>
+                  Total Keys: {Object.keys(rawData).length}
+                </Text>
+                <Text style={styles.devText}>
+                  Cache Stats: {JSON.stringify(structuredData.cacheStats, null, 2)}
+                </Text>
+              </View>
+
+              {/* Activity Data */}
+              <View style={styles.devCard}>
+                <Text style={styles.devCardTitle}>📅 Activity Data (daily_activity_data)</Text>
+                <Text style={styles.devText}>
+                  Days with activity: {Object.keys(structuredData.activityData || {}).length}
+                </Text>
+                <Text style={styles.devText}>
+                  Most recent: {Object.keys(structuredData.activityData || {}).sort().pop() || 'None'}
+                </Text>
+              </View>
+
+              {/* Sleep State */}
+              <View style={styles.devCard}>
+                <Text style={styles.devCardTitle}>😴 Sleep State (sleep_state)</Text>
+                <Text style={styles.devText}>
+                  Currently asleep: {structuredData.sleepState?.isAsleep ? '✅' : '❌'}
+                </Text>
+                <Text style={styles.devText}>
+                  Total sessions: {structuredData.sleepStats?.totalSessions || 0}
+                </Text>
+                <Text style={styles.devText}>
+                  Avg duration: {(structuredData.sleepStats?.averageSleepDuration || 0).toFixed(1)}h
+                </Text>
+              </View>
+
+              {/* Goals Data */}
+              <View style={styles.devCard}>
+                <Text style={styles.devCardTitle}>🎯 Goals Data</Text>
+                <Text style={styles.devText}>
+                  Goals screen (user_goals): {rawData.user_goals ? 
+                    (typeof rawData.user_goals === 'string' ? JSON.parse(rawData.user_goals).length : rawData.user_goals.length)
+                    : 0} goals
+                </Text>
+                <Text style={styles.devText}>
+                  Goals service current: {structuredData.currentGoals ? '1 goal' : 'None'}
+                </Text>
+                <Text style={styles.devText}>
+                  Goals service history: {structuredData.goalsHistory?.length || 0} entries
+                </Text>
+                <Text style={styles.devNote}>
+                  ⚠️ Note: Goals screen and goalsStorage.ts use different keys (see README cleanup)
+                </Text>
+              </View>
+
+              {/* Storage Schema Verification */}
+              <View style={styles.devCard}>
+                <Text style={styles.devCardTitle}>📋 Storage Schema Verification</Text>
+                <Text style={styles.devText}>Expected Keys from README:</Text>
+                <Text style={styles.devText}>  ✅ daily_activity_data: {rawData.daily_activity_data ? 'Found' : 'Missing'}</Text>
+                <Text style={styles.devText}>  ✅ sleep_state: {rawData.sleep_state ? 'Found' : 'Missing'}</Text>
+                <Text style={styles.devText}>  ✅ user_goals: {rawData.user_goals ? 'Found' : 'Missing'}</Text>
+                <Text style={styles.devText}>  🔄 @nudge_user_goals: {rawData['@nudge_user_goals'] ? 'Found' : 'Missing'} (alt API)</Text>
+                <Text style={styles.devText}>  🔄 @nudge_goals_history: {rawData['@nudge_goals_history'] ? 'Found' : 'Missing'} (alt API)</Text>
+                <Text style={styles.devNote}>
+                  ✅ = Currently used by UI, 🔄 = Alternative API available but not wired to UI
+                </Text>
+              </View>
+
+              {/* All Storage Keys */}
+              <View style={styles.devCard}>
+                <Text style={styles.devCardTitle}>🗝️ All Storage Keys</Text>
+                {Object.keys(rawData).map((key, index) => (
+                  <Text key={index} style={styles.devText}>
+                    • {key}: {typeof rawData[key] === 'object' ? 'Object' : typeof rawData[key]}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* Raw Data Display */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Raw Data Store</Text>
+            <Text style={styles.sectionTitle}>
+              {isDeveloperMode ? '🔧 Raw AsyncStorage Dump' : 'Raw Data Store'}
+            </Text>
             <View style={styles.rawDataContainer}>
               <ScrollView style={styles.rawDataScrollView} nestedScrollEnabled>
                 <Text style={styles.rawDataText}>
@@ -335,6 +469,42 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
     fontSize: 10,
     color: '#DDD6FE',
+    lineHeight: 14,
+  },
+  
+  // Developer Mode Styles
+  activeItem: {
+    borderColor: 'rgba(16, 185, 129, 0.4)',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+  },
+  devCard: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+  },
+  devCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#F59E0B',
+    marginBottom: 12,
+    fontFamily: 'System',
+  },
+  devText: {
+    fontFamily: 'monospace',
+    fontSize: 12,
+    color: '#E5E7EB',
+    lineHeight: 16,
+    marginBottom: 4,
+  },
+  devNote: {
+    fontFamily: 'System',
+    fontSize: 11,
+    color: '#F59E0B',
+    fontStyle: 'italic',
+    marginTop: 8,
     lineHeight: 14,
   },
 });

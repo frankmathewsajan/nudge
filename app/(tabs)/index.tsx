@@ -1,18 +1,216 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    View
+  Alert,
+  ScrollView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FloatingNavigation } from '../../components/ui/FloatingNavigation';
+import { InteractiveGoalsInput } from '../../components/ui/InteractiveGoalsInput';
+import { OnboardingFlow } from '../../components/ui/OnboardingFlow';
 import { TodayOverview } from '../../components/ui/TodayOverview';
+import { AsyncStorageUtils } from '../../utils/asyncStorage';
+import { formatGoalsText, saveGoals } from '../../utils/goalsStorage';
+import { hasInternetAccess, isNetworkError, getNetworkErrorMessage } from '../../utils/networkUtils';
 
 export default function HomeScreen() {
   const [sleepState, setSleepState] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showGoalsInput, setShowGoalsInput] = useState(false);
+  const [goalsText, setGoalsText] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isCheckingData, setIsCheckingData] = useState(true);
+  const [networkStatus, setNetworkStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    checkForExistingData();
+  }, []);
+
+  const checkForExistingData = async () => {
+    try {
+      // Check network connectivity
+      const hasInternet = await hasInternetAccess();
+      setNetworkStatus(hasInternet ? 'connected' : 'disconnected');
+      
+      // Check if any core data exists
+      const [activityData, sleepData, goalsData, userGoalsData] = await Promise.all([
+        AsyncStorageUtils.getString('daily_activity_data'),
+        AsyncStorageUtils.getString('sleep_state'),
+        AsyncStorageUtils.getString('@nudge_user_goals'),
+        AsyncStorageUtils.getString('user_goals'),
+      ]);
+
+      // If no data exists, show onboarding
+      if (!activityData && !sleepData && !goalsData && !userGoalsData) {
+        setShowOnboarding(true);
+      }
+    } catch (error) {
+      console.error('Error checking existing data:', error);
+      // If there's an error reading storage, assume we need onboarding
+      setShowOnboarding(true);
+      setNetworkStatus('disconnected'); // Assume no network if data check fails
+    }
+    setIsCheckingData(false);
+  };
+
+  const handleOnboardingComplete = () => {
+    setShowOnboarding(false);
+    setShowGoalsInput(true);
+  };
+
+  const handleGoalsSubmit = async () => {
+    if (!goalsText.trim() || isProcessing) return;
+
+    setIsProcessing(true);
+    
+    try {
+      // Check internet connectivity first
+      const hasInternet = await hasInternetAccess();
+      
+      if (!hasInternet) {
+        Alert.alert(
+          'Internet Connection Required',
+          'AI goal processing requires an internet connection. Please connect to the internet and try again.',
+          [
+            {
+              text: 'Skip AI Processing',
+              style: 'cancel',
+              onPress: () => handleOfflineGoalsProcessing()
+            },
+            {
+              text: 'Retry',
+              onPress: () => {
+                setIsProcessing(false);
+                // Let user try again when they have internet
+              }
+            }
+          ]
+        );
+        setIsProcessing(false);
+        return;
+      }
+
+      // Process goals through Gemini AI using the prompt.md template
+      const { sendGoalsToGemini } = await import('../../utils/geminiAI');
+      const aiResponse = await sendGoalsToGemini(goalsText, 'onboarding_user');
+      
+      // Convert AI response to Goals screen format
+      const structuredGoals: any[] = [];
+      
+      // Process each category and create goal objects
+      const categories = ['urgent', 'long_term', 'maintenance', 'optional'] as const;
+      categories.forEach(category => {
+        if (aiResponse[category] && Array.isArray(aiResponse[category])) {
+          aiResponse[category].forEach((task: any, index: number) => {
+            structuredGoals.push({
+              id: `${category}_${Date.now()}_${index}`,
+              title: task.task,
+              description: `${task.duration} • ${task.frequency} • ${task.suggested_time}${task.deadline ? ` • Due: ${task.deadline}` : ''}`,
+              category: category,
+              priority: task.priority === 1 ? 'high' : task.priority <= 3 ? 'medium' : 'low',
+              progress: 0,
+              completed: false,
+              createdAt: new Date().toISOString(),
+              // Store additional AI data for future reference
+              aiData: {
+                duration: task.duration,
+                frequency: task.frequency,
+                suggested_time: task.suggested_time,
+                deadline: task.deadline,
+                originalCategory: task.category
+              }
+            });
+          });
+        }
+      });
+      
+      // Save the structured goals to AsyncStorage for the Goals screen
+      await AsyncStorageUtils.setString('user_goals', JSON.stringify(structuredGoals));
+      
+      // Also save the original goals text and AI response for reference
+      await saveGoals(goalsText);
+      await AsyncStorageUtils.setString('ai_processed_goals', JSON.stringify(aiResponse));
+      
+      // Complete the onboarding process
+      setShowGoalsInput(false);
+      setGoalsText('');
+      
+    } catch (error) {
+      console.error('Error processing goals with AI:', error);
+      
+      // Check if it's a network error
+      if (isNetworkError(error)) {
+        Alert.alert(
+          'Connection Lost',
+          'Internet connection was lost during AI processing. You can continue without AI processing or try again when connected.',
+          [
+            {
+              text: 'Continue Without AI',
+              style: 'cancel',
+              onPress: () => handleOfflineGoalsProcessing()
+            },
+            {
+              text: 'Try Again',
+              onPress: () => {
+                setIsProcessing(false);
+                // Let user try again
+              }
+            }
+          ]
+        );
+      } else {
+        // Handle other errors with fallback processing
+        Alert.alert(
+          'AI Processing Failed',
+          'There was an issue with AI processing. Your goals will be saved in simple format.',
+          [
+            {
+              text: 'OK',
+              onPress: () => handleOfflineGoalsProcessing()
+            }
+          ]
+        );
+      }
+    }
+    setIsProcessing(false);
+  };
+
+  const handleOfflineGoalsProcessing = async () => {
+    try {
+      // Fallback: save goals in simple format when offline or AI fails
+      const formattedGoals = formatGoalsText(goalsText);
+      const fallbackGoal = {
+        id: Date.now().toString(),
+        title: formattedGoals.split('.')[0] || 'My Goals',
+        description: formattedGoals,
+        category: 'personal' as const,
+        priority: 'high' as const,
+        progress: 0,
+        completed: false,
+        createdAt: new Date().toISOString(),
+        isOfflineProcessed: true, // Flag to indicate this was processed offline
+      };
+      
+      await AsyncStorageUtils.setString('user_goals', JSON.stringify([fallbackGoal]));
+      await saveGoals(goalsText);
+      
+      // Complete onboarding even in offline mode
+      setShowGoalsInput(false);
+      setGoalsText('');
+      
+    } catch (error) {
+      console.error('Error in offline goals processing:', error);
+      Alert.alert(
+        'Save Failed',
+        'Unable to save your goals. Please try again.',
+        [{ text: 'OK' }]
+      );
+    }
+  };
 
   const handleSleepStateChange = (isAsleep: boolean) => {
     setSleepState(isAsleep);
@@ -29,6 +227,63 @@ export default function HomeScreen() {
   const navigateToGoals = () => {
     console.log('Navigate to goals tab');
   };
+
+  // Show loading while checking data
+  if (isCheckingData) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" translucent />
+        <Text style={styles.loadingText}>Loading...</Text>
+      </View>
+    );
+  }
+
+  // Show onboarding flow if no data exists
+  if (showOnboarding) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" translucent />
+        <OnboardingFlow onComplete={handleOnboardingComplete} />
+      </View>
+    );
+  }
+
+  // Show goals input after onboarding
+  if (showGoalsInput) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top + 40 }]}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" translucent />
+        <View style={styles.goalsInputContainer}>
+          <View style={styles.goalsHeader}>
+            <Text style={styles.goalsTitle}>What are your goals?</Text>
+            <Text style={styles.goalsSubtitle}>
+              Tell me about your aspirations. I'll help refine and organize them.
+            </Text>
+          </View>
+          
+          <InteractiveGoalsInput
+            value={goalsText}
+            onChangeText={setGoalsText}
+            onSubmit={handleGoalsSubmit}
+            disabled={isProcessing}
+            isLoading={isProcessing}
+            networkStatus={networkStatus}
+          />
+          
+          <View style={styles.goalsFooter}>
+            <Text style={styles.goalsHint}>
+              {isProcessing 
+                ? "🤖 AI is analyzing your goals and creating a structured plan..." 
+                : networkStatus === 'disconnected'
+                ? "⚠️ No internet connection. AI processing will be skipped."
+                : "💡 Try: \"I want to learn programming, get fit, and build better habits\""
+              }
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 72 }]}>
@@ -239,5 +494,54 @@ const styles = StyleSheet.create({
   actionDescription: {
     fontSize: 14,
     color: '#666666',
+  },
+  
+  // Loading and Onboarding Styles
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#3C2A21',
+    fontFamily: 'System',
+  },
+  
+  // Goals Input Styles
+  goalsInputContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+  },
+  goalsHeader: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  goalsTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#3C2A21',
+    textAlign: 'center',
+    marginBottom: 12,
+    fontFamily: 'System',
+  },
+  goalsSubtitle: {
+    fontSize: 16,
+    color: '#8B7355',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontFamily: 'System',
+  },
+  goalsFooter: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  goalsHint: {
+    fontSize: 14,
+    color: '#B8A082',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    fontFamily: 'System',
   },
 });

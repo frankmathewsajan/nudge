@@ -19,7 +19,6 @@ import { FloatingNavigation } from '../../components/ui/FloatingNavigation';
 import {
     formatDateKey,
     getAllActivityData,
-    initializeSampleData,
     type DayActivity
 } from '../../utils/activityData';
 
@@ -66,9 +65,6 @@ export default function TrackScreen() {
 
   const loadActivityData = async () => {
     try {
-      // Initialize sample data if none exists
-      await initializeSampleData();
-      
       // Load all activity data
       const data = await getAllActivityData();
       setDayActivityData(data);
@@ -355,7 +351,17 @@ export default function TrackScreen() {
           </View>
 
           {/* Floating Add Button */}
-          <TouchableOpacity style={styles.floatingAddButton} activeOpacity={0.9}>
+          <TouchableOpacity 
+            style={styles.floatingAddButton} 
+            activeOpacity={0.9}
+            onPress={() => {
+              Alert.alert(
+                'Quick Add Activity',
+                'This will be connected to a quick add flow. For now, you can add activities via notifications or the detailed day view.',
+                [{ text: 'OK' }]
+              );
+            }}
+          >
             <FontAwesome name="plus" size={24} color="#FFFFFF" />
           </TouchableOpacity>
         </Animated.View>

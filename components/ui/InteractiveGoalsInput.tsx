@@ -14,6 +14,7 @@ interface InteractiveInputProps {
   onSubmit: () => void;
   disabled?: boolean;
   isLoading?: boolean;
+  networkStatus?: 'checking' | 'connected' | 'disconnected';
 }
 
 const GOAL_SUGGESTIONS = [
@@ -26,7 +27,7 @@ const WORD_TARGET = 10;
 const ANIMATION_DURATION = 300;
 
 export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo(({
-  value, onChangeText, onSubmit, disabled = false, isLoading = false,
+  value, onChangeText, onSubmit, disabled = false, isLoading = false, networkStatus = 'connected',
 }) => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   
@@ -107,6 +108,7 @@ export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo
           placeholderTextColor="#9CA3AF"
           editable={!disabled}
           textAlignVertical="top"
+          scrollEnabled={true}
         />
         
         <View style={styles.progressContainer}>
@@ -160,7 +162,12 @@ export const InteractiveGoalsInput: React.FC<InteractiveInputProps> = React.memo
         >
           <View style={[styles.buttonContent, !isReadyToSubmit && styles.buttonContentDisabled]}>
             <Text style={[styles.submitButtonText, !isReadyToSubmit && styles.submitButtonTextDisabled]}>
-              {isLoading ? 'Processing...' : 'Transform Goals'}
+              {isLoading 
+                ? 'AI Processing...' 
+                : networkStatus === 'disconnected' 
+                ? 'Save Goals (Offline)'
+                : 'Analyze with AI'
+              }
             </Text>
           </View>
         </TouchableOpacity>
@@ -183,12 +190,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05, 
     shadowRadius: 12, 
     elevation: 3,
+    position: 'relative', // Allow for scroll indicator positioning
   },
   textInput: { 
     fontSize: 18, 
     color: '#1F2937', 
     lineHeight: 28, 
     minHeight: 140, 
+    maxHeight: 200, // Limit maximum height to prevent pushing button down
     textAlignVertical: 'top',
     fontWeight: '400',
     letterSpacing: -0.2,

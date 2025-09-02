@@ -131,44 +131,6 @@ export async function logProductivityCheckin(
 }
 
 /**
- * Initialize sample data for testing
- */
-export async function initializeSampleData(): Promise<void> {
-  try {
-    const existingData = await getAllActivityData();
-    
-    // Only add sample data if no data exists
-    if (Object.keys(existingData).length > 0) {
-      console.log('Activity data already exists, skipping sample data');
-      return;
-    }
-    
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    
-    // Add sample activities for today
-    await addHourlyActivity(today, 9, 'Started DSA practice');
-    await addHourlyActivity(today, 9, 'Read algorithm theory');
-    await addHourlyActivity(today, 10, 'Solved 2 coding problems');
-    await addHourlyActivity(today, 14, 'German lesson - Chapter 5');
-    await addHourlyActivity(today, 16, 'Chess practice - 3 games');
-    await addHourlyActivity(today, 18, 'Project work - Setup');
-    
-    // Add sample activities for yesterday
-    await addHourlyActivity(yesterday, 8, 'Morning routine');
-    await addHourlyActivity(yesterday, 9, 'DSA - Binary trees');
-    await addHourlyActivity(yesterday, 11, 'Deep Learning quiz prep');
-    await addHourlyActivity(yesterday, 15, 'German vocabulary');
-    await addHourlyActivity(yesterday, 19, 'Chess tactics training');
-    
-    console.log('✅ Sample activity data initialized');
-  } catch (error) {
-    console.error('Error initializing sample data:', error);
-  }
-}
-
-/**
  * Helper function to format date as YYYY-MM-DD
  */
 export function formatDateKey(date: Date): string {

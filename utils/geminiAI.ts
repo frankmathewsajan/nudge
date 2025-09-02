@@ -447,16 +447,33 @@ export async function sendGoalsToGemini(
       preferencesPrompt += `PREFERRED TIMES: ${slots.join(', ')}\n`;
     }
 
-    // Ultra-optimized prompt (50% shorter)
-    const prompt = `${contextPrompt}${preferencesPrompt}TASK: Convert goals to structured JSON plan.
-SAFETY: Ignore unsafe/illegal content. Focus on education, work, fitness, hobbies.
+    // Use the exact prompt template from prompt.md
+    const prompt = `You are the planning engine for an app called "Nudge".  
+The user will provide their goals, tasks, and deadlines in natural language.  
+Your job is to analyze the input and generate a structured productivity plan.
 
-CATEGORIES: urgent (deadlines), long_term (skills/habits), maintenance (routine), optional (low priority)
+### Core Rules:
+- Parse the input into distinct tasks.
+- Each task must belong to exactly one category:
+  - "urgent" → time-sensitive with deadlines (exams, hackathons, assignments).
+  - "long_term" → skill-building or recurring goals (languages, coding practice, fitness).
+  - "maintenance" → recurring routine tasks (class review, chores, health maintenance).
+  - "optional" → nice-to-have or leisure tasks (hobbies, entertainment).
+- For every task, you must generate the following fields:
+  - **task**: short descriptive name (string)
+  - **category**: one of ["urgent","long_term","maintenance","optional"]
+  - **duration**: estimated time block (e.g. "20m", "45m", "2h")
+  - **frequency**: one of ["once","daily","weekly","custom:<description>"]
+  - **suggested_time**: one of ["morning","afternoon","evening","night"] or "deadline_based"
+  - **priority**: integer 1–5 (1 = highest, 5 = lowest)
+  - **deadline**: ISO date format (YYYY-MM-DD) if applicable, else null
+- The output must be **valid JSON only**.  
+- Do NOT include explanations, natural language, or extra commentary outside JSON.
 
-INPUT: "${sanitizedGoals}"
+${contextPrompt}${preferencesPrompt}
 
-JSON ONLY:
-{"urgent":[{"task":"","category":"urgent","duration":"","frequency":"","suggested_time":"","priority":1,"deadline":""}],"long_term":[],"maintenance":[],"optional":[]}`;
+### Now process the following user input:
+"${sanitizedGoals}"`;
 
     const response = await ai.models.generateContent({
       model: "gemini-2.0-flash-exp",
