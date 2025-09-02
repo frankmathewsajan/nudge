@@ -1,9 +1,9 @@
 /**
  * Network Connectivity Utilities
- * Handles network detection and connectivity checks
+ * Handles network detection and connectivity checks using Expo NetInfo
  */
 
-import NetInfo from '@react-native-community/netinfo';
+import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 
 interface NetworkState {
   isConnected: boolean;
@@ -16,7 +16,7 @@ interface NetworkState {
  */
 export async function checkNetworkConnectivity(): Promise<NetworkState> {
   try {
-    const state = await NetInfo.fetch();
+    const state: NetInfoState = await NetInfo.fetch();
     return {
       isConnected: state.isConnected ?? false,
       type: state.type,
@@ -50,7 +50,7 @@ export async function waitForInternetConnection(timeoutMs: number = 10000): Prom
       resolve(false);
     }, timeoutMs);
 
-    const unsubscribe = NetInfo.addEventListener(state => {
+    const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
       if (state.isConnected && state.isInternetReachable) {
         clearTimeout(timeout);
         unsubscribe();

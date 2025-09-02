@@ -24,6 +24,8 @@ export default function HomeScreen() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isCheckingData, setIsCheckingData] = useState(true);
   const [networkStatus, setNetworkStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const [showCompletionMessage, setShowCompletionMessage] = useState(false);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -47,11 +49,18 @@ export default function HomeScreen() {
       // If no data exists, show onboarding
       if (!activityData && !sleepData && !goalsData && !userGoalsData) {
         setShowOnboarding(true);
+        setOnboardingCompleted(false);
+      } else {
+        // Data exists, user has completed onboarding
+        setOnboardingCompleted(true);
+        setShowOnboarding(false);
+        setShowGoalsInput(false);
       }
     } catch (error) {
       console.error('Error checking existing data:', error);
       // If there's an error reading storage, assume we need onboarding
       setShowOnboarding(true);
+      setOnboardingCompleted(false);
       setNetworkStatus('disconnected'); // Assume no network if data check fails
     }
     setIsCheckingData(false);
@@ -135,9 +144,16 @@ export default function HomeScreen() {
       await saveGoals(goalsText);
       await AsyncStorageUtils.setString('ai_processed_goals', JSON.stringify(aiResponse));
       
-      // Complete the onboarding process
+      // Mark onboarding as completed and transition to main app
+      setOnboardingCompleted(true);
       setShowGoalsInput(false);
       setGoalsText('');
+      
+      // Show completion message briefly
+      setShowCompletionMessage(true);
+      setTimeout(() => {
+        setShowCompletionMessage(false);
+      }, 2000);
       
     } catch (error) {
       console.error('Error processing goals with AI:', error);
@@ -198,9 +214,16 @@ export default function HomeScreen() {
       await AsyncStorageUtils.setString('user_goals', JSON.stringify([fallbackGoal]));
       await saveGoals(goalsText);
       
-      // Complete onboarding even in offline mode
+      // Mark onboarding as completed and transition to main app
+      setOnboardingCompleted(true);
       setShowGoalsInput(false);
       setGoalsText('');
+      
+      // Show completion message briefly
+      setShowCompletionMessage(true);
+      setTimeout(() => {
+        setShowCompletionMessage(false);
+      }, 2000);
       
     } catch (error) {
       console.error('Error in offline goals processing:', error);
@@ -238,8 +261,8 @@ export default function HomeScreen() {
     );
   }
 
-  // Show onboarding flow if no data exists
-  if (showOnboarding) {
+  // Show onboarding flow if no data exists and onboarding not completed
+  if (showOnboarding && !onboardingCompleted) {
     return (
       <View style={styles.container}>
         <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" translucent />
@@ -248,8 +271,8 @@ export default function HomeScreen() {
     );
   }
 
-  // Show goals input after onboarding
-  if (showGoalsInput) {
+  // Show goals input after onboarding but before completion
+  if (showGoalsInput && !onboardingCompleted) {
     return (
       <View style={[styles.container, { paddingTop: insets.top + 40 }]}>
         <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" translucent />
@@ -281,6 +304,27 @@ export default function HomeScreen() {
             </Text>
           </View>
         </View>
+      </View>
+    );
+  }
+
+  // Show completion message after onboarding
+  if (showCompletionMessage && onboardingCompleted) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" translucent />
+        <Text style={styles.completionTitle}>✅ Setup Complete!</Text>
+        <Text style={styles.completionSubtitle}>Welcome to Nudge</Text>
+      </View>
+    );
+  }
+
+  // Main app interface (only show when onboarding is completed)
+  if (!onboardingCompleted) {
+    return (
+      <View style={[styles.container, styles.centerContent]}>
+        <StatusBar barStyle="dark-content" backgroundColor="#F7F3F0" translucent />
+        <Text style={styles.loadingText}>Preparing your experience...</Text>
       </View>
     );
   }
@@ -542,6 +586,22 @@ const styles = StyleSheet.create({
     color: '#B8A082',
     textAlign: 'center',
     fontStyle: 'italic',
+    fontFamily: 'System',
+  },
+  
+  // Completion Message Styles
+  completionTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#3C2A21',
+    textAlign: 'center',
+    marginBottom: 8,
+    fontFamily: 'System',
+  },
+  completionSubtitle: {
+    fontSize: 16,
+    color: '#8B7355',
+    textAlign: 'center',
     fontFamily: 'System',
   },
 });
