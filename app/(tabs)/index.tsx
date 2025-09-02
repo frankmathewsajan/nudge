@@ -1,16 +1,13 @@
-import { FontAwesome } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
     ScrollView,
     StatusBar,
     StyleSheet,
     Text,
-    TouchableOpacity,
     View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SleepControl } from '../../components/ui/SleepControl';
-import { StartDay } from '../../components/ui/StartDay';
+import { FloatingNavigation } from '../../components/ui/FloatingNavigation';
 import { TodayOverview } from '../../components/ui/TodayOverview';
 
 export default function HomeScreen() {
@@ -52,65 +49,15 @@ export default function HomeScreen() {
             <View style={styles.bentoFull}>
               <TodayOverview onViewDetails={handleViewDetails} />
             </View>
-
-            {/* Row 2: Sleep & Wake + Quick Stats */}
-            <View style={styles.bentoRow}>
-              <View style={styles.bentoHalf}>
-                <SleepControl onSleepStateChange={handleSleepStateChange} />
-              </View>
-              <View style={styles.bentoHalf}>
-                <View style={styles.statsCard}>
-                  <FontAwesome name="trophy" size={24} color="#6750A4" />
-                  <Text style={styles.statsNumber}>7</Text>
-                  <Text style={styles.statsLabel}>Day Streak</Text>
-                </View>
-              </View>
-            </View>
-
-            {/* Row 3: Start Day + Goals */}
-            <View style={styles.bentoRow}>
-              <View style={styles.bentoTwoThirds}>
-                <StartDay onDayStarted={handleDayStarted} />
-              </View>
-              <View style={styles.bentoThird}>
-                <TouchableOpacity style={styles.goalsCard} onPress={navigateToGoals}>
-                  <FontAwesome name="bullseye" size={20} color="#FFFFFF" />
-                  <Text style={styles.goalsText}>Goals</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            {/* Row 4: Quick Actions */}
-            <View style={styles.bentoRow}>
-              <TouchableOpacity 
-                style={[styles.actionCard, styles.bentoHalf]}
-                onPress={handleViewDetails}
-                activeOpacity={0.8}
-              >
-                <View style={styles.actionIconContainer}>
-                  <FontAwesome name="calendar" size={20} color="#6750A4" />
-                </View>
-                <Text style={styles.actionTitle}>Track</Text>
-                <Text style={styles.actionSubtitle}>View calendar</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={[styles.actionCard, styles.bentoHalf]}
-                onPress={navigateToGoals}
-                activeOpacity={0.8}
-              >
-                <View style={styles.actionIconContainer}>
-                  <FontAwesome name="line-chart" size={20} color="#6750A4" />
-                </View>
-                <Text style={styles.actionTitle}>Insights</Text>
-                <Text style={styles.actionSubtitle}>View progress</Text>
-              </TouchableOpacity>
-            </View>
+            
 
           </View>
 
         </View>
       </ScrollView>
+      
+      {/* Floating Navigation */}
+      <FloatingNavigation currentRoute="index" />
     </View>
   );
 }

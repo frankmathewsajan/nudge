@@ -318,21 +318,6 @@ export function ProductivityTracker({
                   </Text>
                 </View>
 
-                {/* Streak Updates */}
-                {dailyReport.streak_updates.length > 0 && (
-                  <View style={styles.streakContainer}>
-                    <Text style={styles.streakTitle}>STREAK UPDATES</Text>
-                    {dailyReport.streak_updates.map((streak: any, index: number) => (
-                      <View key={index} style={styles.streakItem}>
-                        <Text style={styles.streakTask}>{streak.task}</Text>
-                        <Text style={styles.streakCount}>
-                          {streak.current_streak} days {streak.completed_today ? '✓' : '○'}
-                        </Text>
-                      </View>
-                    ))}
-                  </View>
-                )}
-
                 {/* Insights */}
                 <View style={styles.insightContainer}>
                   <Text style={styles.insightTitle}>INSIGHTS</Text>
@@ -658,38 +643,6 @@ const styles = StyleSheet.create({
     color: '#15803D',
     marginBottom: 4,
     lineHeight: 22,
-  },
-  
-  streakContainer: {
-    backgroundColor: '#EFF6FF',
-    padding: 20,
-    borderRadius: 8,
-    marginBottom: 20,
-    borderLeftWidth: 4,
-    borderLeftColor: '#3B82F6',
-  },
-  streakTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1E40AF',
-    marginBottom: 12,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  streakItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  streakTask: {
-    fontSize: 16,
-    color: '#1E40AF',
-  },
-  streakCount: {
-    fontSize: 16,
-    color: '#3B82F6',
-    fontWeight: '500',
   },
   
   insightContainer: {

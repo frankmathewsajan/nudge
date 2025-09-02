@@ -169,13 +169,13 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#3C2A21', // Rich brown text
+    color: '#F3E8FF', // Light purple text for dark gradient
     marginBottom: 4,
     fontFamily: 'System',
   },
   timeText: {
     fontSize: 14,
-    color: '#6B5B73', // Muted lavender
+    color: '#C4B5FD', // Light muted purple for dark gradient
     fontFamily: 'System',
   },
   statsContainer: {
@@ -192,13 +192,13 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#6B5B73',
+    color: '#F3E8FF', // Light purple for dark gradient
     marginBottom: 4,
     fontFamily: 'System',
   },
   statLabel: {
     fontSize: 12,
-    color: '#3C2A21',
+    color: '#C4B5FD', // Light muted purple for dark gradient
     textAlign: 'center',
     fontFamily: 'System',
     flexWrap: 'wrap',
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 14,
-    color: '#3C2A21',
+    color: '#1A0E3D', // Dark text for light status background
     fontWeight: '500',
     fontFamily: 'System',
     flexShrink: 1,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   detailsButtonText: {
-    color: '#3C2A21', // Rich brown
+    color: '#1A0E3D', // Dark text for beige button
     fontSize: 14,
     fontWeight: '600',
     fontFamily: 'System',

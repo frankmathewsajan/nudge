@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FloatingNavigation } from '../../components/ui/FloatingNavigation';
 import { AsyncStorageUtils } from '../../utils/asyncStorage';
 
 interface Goal {
@@ -440,6 +441,9 @@ export default function GoalsScreen() {
           )}
         </ScrollView>
       </Animated.View>
+      
+      {/* Floating Navigation */}
+      <FloatingNavigation currentRoute="goals" />
     </View>
   );
 }

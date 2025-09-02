@@ -12,6 +12,7 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FloatingNavigation } from '../../components/ui/FloatingNavigation';
 import { AsyncStorageUtils } from '../../utils/asyncStorage';
 
 export default function SettingsScreen() {
@@ -204,6 +205,9 @@ export default function SettingsScreen() {
           </View>
         </ScrollView>
       </Animated.View>
+      
+      {/* Floating Navigation */}
+      <FloatingNavigation currentRoute="settings" />
     </View>
   );
 }

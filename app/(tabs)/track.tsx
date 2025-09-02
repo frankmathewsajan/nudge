@@ -15,6 +15,7 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FloatingNavigation } from '../../components/ui/FloatingNavigation';
 import {
     formatDateKey,
     getAllActivityData,
@@ -246,15 +247,11 @@ export default function TrackScreen() {
           <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
             <View style={styles.headerContent}>
               <View style={styles.headerLeft}>
-                <View style={styles.iconContainer}>
-                  <FontAwesome name="calendar" size={24} color="#6750A4" />
-                </View>
-                <View>
-                  <Text style={styles.headerTitle}>Activity Tracker</Text>
-                  <Text style={styles.headerSubtitle}>Your productivity journey</Text>
-                </View>
+                <Text style={styles.headerTitle}>Track</Text>
+                <Text style={styles.headerSubtitle}>Your productivity journey</Text>
               </View>
               <TouchableOpacity style={styles.todayButton} onPress={() => setCurrentDate(new Date())}>
+                <FontAwesome name="calendar-o" size={16} color="#FFFFFF" />
                 <Text style={styles.todayButtonText}>Today</Text>
               </TouchableOpacity>
             </View>
@@ -269,7 +266,7 @@ export default function TrackScreen() {
                 onPress={() => navigateMonth('prev')}
                 activeOpacity={0.7}
               >
-                <FontAwesome name="chevron-left" size={18} color="#6750A4" />
+                <FontAwesome name="chevron-left" size={20} color="#4A90E2" />
               </TouchableOpacity>
               
               <View style={styles.monthTitleContainer}>
@@ -281,7 +278,7 @@ export default function TrackScreen() {
                 onPress={() => navigateMonth('next')}
                 activeOpacity={0.7}
               >
-                <FontAwesome name="chevron-right" size={18} color="#6750A4" />
+                <FontAwesome name="chevron-right" size={20} color="#4A90E2" />
               </TouchableOpacity>
             </View>
 
@@ -327,29 +324,40 @@ export default function TrackScreen() {
               ))}
             </View>
 
-            {/* Activity Summary */}
-            <View style={styles.summaryContainer}>
-              <View style={styles.summaryCard}>
-                <FontAwesome name="check-circle" size={20} color="#4CAF50" />
-                <View style={styles.summaryText}>
-                  <Text style={styles.summaryNumber}>
-                    {Object.keys(dayActivityData).length}
-                  </Text>
-                  <Text style={styles.summaryLabel}>Active Days</Text>
+            {/* Quick Stats */}
+            <View style={styles.quickStats}>
+              <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <FontAwesome name="check-circle" size={18} color="#4CAF50" />
                 </View>
+                <Text style={styles.statNumber}>{Object.keys(dayActivityData).length}</Text>
+                <Text style={styles.statLabel}>Active Days</Text>
               </View>
               
-              <View style={styles.summaryCard}>
-                <FontAwesome name="clock-o" size={20} color="#FF9800" />
-                <View style={styles.summaryText}>
-                  <Text style={styles.summaryNumber}>
-                    {Object.values(dayActivityData).reduce((sum, day) => sum + day.totalActivities, 0)}
-                  </Text>
-                  <Text style={styles.summaryLabel}>Total Activities</Text>
+              <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <FontAwesome name="flash" size={18} color="#FF9800" />
                 </View>
+                <Text style={styles.statNumber}>
+                  {Object.values(dayActivityData).reduce((sum, day) => sum + day.totalActivities, 0)}
+                </Text>
+                <Text style={styles.statLabel}>Activities</Text>
+              </View>
+              
+              <View style={styles.statItem}>
+                <View style={styles.statIcon}>
+                  <FontAwesome name="fire" size={18} color="#FF5722" />
+                </View>
+                <Text style={styles.statNumber}>7</Text>
+                <Text style={styles.statLabel}>Streak</Text>
               </View>
             </View>
           </View>
+
+          {/* Floating Add Button */}
+          <TouchableOpacity style={styles.floatingAddButton} activeOpacity={0.9}>
+            <FontAwesome name="plus" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
         </Animated.View>
       </SafeAreaView>
 
@@ -372,6 +380,9 @@ export default function TrackScreen() {
           {renderDayDetail()}
         </SafeAreaView>
       </Modal>
+      
+      {/* Floating Navigation */}
+      <FloatingNavigation currentRoute="track" />
     </View>
   );
 }
@@ -380,6 +391,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
+    backgroundColor: '#FAFBFC',
   },
   gradientBackground: {
     position: 'absolute',
@@ -393,10 +405,13 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingBottom: 100, // Space for floating button
   },
+  
+  // Header Styles - Modern & Clean
   header: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 16,
   },
   headerContent: {
     flexDirection: 'row',
@@ -404,35 +419,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(103, 80, 164, 0.1)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
+    flex: 1,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#3C2A21', // Rich brown for elegant contrast
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#1A1A1A',
     fontFamily: 'System',
+    letterSpacing: -0.5,
   },
   headerSubtitle: {
-    fontSize: 14,
-    color: '#8B7355', // Warm brown
+    fontSize: 16,
+    color: '#666666',
     fontWeight: '400',
     fontFamily: 'System',
+    marginTop: 2,
   },
   todayButton: {
-    backgroundColor: '#6750A4',
+    backgroundColor: '#4A90E2',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingVertical: 10,
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   todayButtonText: {
     color: '#FFFFFF',
@@ -440,34 +455,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontFamily: 'System',
   },
+  
+  // Calendar Container - Google Calendar Style
   calendarContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    margin: 16,
-    borderRadius: 24,
-    padding: 24,
-    elevation: 4,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    padding: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(231, 224, 236, 0.3)',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
+  
+  // Month Navigation - Minimalist
   monthNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 24,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
   },
   navButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(103, 80, 164, 0.1)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#F8F9FA',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E8EAED',
   },
+  
+  // Month Title - Centered and Clean
   monthTitleContainer: {
     flex: 1,
     alignItems: 'center',
@@ -672,5 +693,63 @@ const styles = StyleSheet.create({
     color: '#666666',
     textAlign: 'center',
     lineHeight: 24,
+  },
+  
+  // Quick Stats - Modern Cards
+  quickStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+    paddingHorizontal: 4,
+  },
+  statItem: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    borderRadius: 12,
+    padding: 16,
+    marginHorizontal: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E8EAED',
+  },
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1D1B20',
+    marginBottom: 2,
+  },
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#5F6368',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  
+  // Floating Add Button - Google Style
+  floatingAddButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#4285F4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });
