@@ -46,9 +46,15 @@ export default function HomeScreen() {
     // TODO: Implement search functionality
   };
 
-  const handleVoiceSearch = () => {
+  const handleVoiceSearch = async () => {
     console.log('Voice search activated');
-    // TODO: Implement voice search
+    try {
+      await AsyncStorage.setItem('@nudge_onboarding_completed', 'false');
+      
+      setShowOnboarding(true);
+    } catch (error) {
+      console.error('Error saving onboarding completion:', error);
+    }
   };
 
   const handleCameraSearch = () => {

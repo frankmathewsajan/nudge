@@ -15,6 +15,8 @@ import {
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { TypingText } from './TypingText';
+import AnimatedBackground from './AnimatedBackground';
 
 interface FormOnboardingProps {
   onComplete: (userName: string) => void;
@@ -24,6 +26,14 @@ export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) =>
   const [name, setName] = useState('');
   const [isAgeConfirmed, setIsAgeConfirmed] = useState(false);
   const [isPolicyAccepted, setIsPolicyAccepted] = useState(false);
+  const [showAgeConfirmation, setShowAgeConfirmation] = useState(false);
+  const [showNameContinue, setShowNameContinue] = useState(false);
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
+  const [showPolicySection, setShowPolicySection] = useState(false);
+  const [headerTypingComplete, setHeaderTypingComplete] = useState(false);
+  const [subtitleTypingComplete, setSubtitleTypingComplete] = useState(false);
+  const [descriptionTypingComplete, setDescriptionTypingComplete] = useState(false);
+  const [welcomeTypingComplete, setWelcomeTypingComplete] = useState(false);
   
   const insets = useSafeAreaInsets();
 
@@ -31,7 +41,32 @@ export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) =>
     return name.trim().length > 0 && isAgeConfirmed;
   };
 
-  const handleContinue = () => {
+  const handleNameFocus = () => {
+    if (name.trim().length > 0) {
+      setShowAgeConfirmation(true);
+    }
+  };
+
+  const handleNameChange = (text: string) => {
+    setName(text);
+    if (text.trim().length > 0) {
+      setShowAgeConfirmation(true);
+      setShowNameContinue(true);
+    } else {
+      setShowAgeConfirmation(false);
+      setShowNameContinue(false);
+    }
+  };
+
+  const handleFirstContinue = () => {
+    if (name.trim().length > 0 && isAgeConfirmed) {
+      setShowNameContinue(false);
+      setShowAgeConfirmation(false); // Hide age confirmation
+      setShowWelcomeMessage(true);
+    }
+  };
+
+  const handleFinalContinue = () => {
     if (name.trim().length > 0 && isAgeConfirmed) {
       setIsPolicyAccepted(true);
       onComplete(name.trim());
@@ -48,7 +83,10 @@ export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) =>
 
   return (
     <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+      
+      {/* Animated Background */}
+      <AnimatedBackground intensity="moderate" />
       
       <KeyboardAvoidingView
         style={styles.keyboardContainer}
@@ -62,13 +100,33 @@ export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) =>
         >
           {/* Header */}
           <View style={styles.headerContainer}>
-            <Text style={styles.headerTitle}>Hello, I'm Nudge.</Text>
-            <Text style={styles.headerSubtitle}>
-              I'm a next generation AI assistant built for work and trained to be safe, accurate, and secure.
-            </Text>
-            <Text style={styles.headerDescription}>
-              I'd love for us to get to know each other a bit better.
-            </Text>
+            <TypingText 
+              text="Hello, I'm Nudge."
+              style={styles.headerTitle}
+              speed={80}
+              showCursor={true}
+              onComplete={() => setHeaderTypingComplete(true)}
+            />
+            {headerTypingComplete && (
+              <TypingText 
+                text="I'm a next generation AI app to help you track your day, schedule tasks and make sure the work you do aligns with your goals."
+                style={styles.headerSubtitle}
+                speed={35}
+                delay={500}
+                showCursor={true}
+                onComplete={() => setSubtitleTypingComplete(true)}
+              />
+            )}
+            {headerTypingComplete && subtitleTypingComplete && (
+              <TypingText 
+                text="I'd love for us to get to know each other a bit better."
+                style={styles.headerDescription}
+                speed={40}
+                delay={300}
+                showCursor={true}
+                onComplete={() => setDescriptionTypingComplete(true)}
+              />
+            )}
           </View>
 
           {/* Name Input Section */}
@@ -88,7 +146,8 @@ export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) =>
                   placeholder="Enter your full name"
                   placeholderTextColor="#9CA3AF"
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={handleNameChange}
+                  onFocus={handleNameFocus}
                   autoCapitalize="words"
                   autoCorrect={false}
                   textContentType="name"
@@ -96,22 +155,8 @@ export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) =>
               </View>
             </View>
 
-            {/* Display user message if name is entered */}
-            {name.trim().length > 0 && (
-              <View style={styles.userMessageContainer}>
-                <Text style={styles.welcomeMessage}>Lovely to meet you, {name.trim()}.</Text>
-              </View>
-            )}
-          </View>
-
-          {/* Requirements Section */}
-          {name.trim().length > 0 && (
-            <View style={styles.requirementsSection}>
-              <Text style={styles.requirementsTitle}>
-                A few things to know before we start working together:
-              </Text>
-
-              {/* Age Confirmation */}
+            {/* Age Confirmation - Shows after name input focus */}
+            {showAgeConfirmation && (
               <TouchableOpacity
                 style={styles.checkboxContainer}
                 onPress={() => setIsAgeConfirmed(!isAgeConfirmed)}
@@ -122,50 +167,94 @@ export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) =>
                   {isAgeConfirmed && <Text style={styles.checkmark}>✓</Text>}
                 </View>
                 <Text style={styles.checkboxLabel}>
-                  I confirm that I am at least 18 years of age
+                  I confirm that I am at least 13 years of age
                 </Text>
               </TouchableOpacity>
+            )}
+
+            {/* First Continue Button */}
+            {showNameContinue && isFormValid() && (
+              <View style={styles.continueSection}>
+                <TouchableOpacity
+                  style={[styles.continueButton, styles.continueButtonActive]}
+                  onPress={handleFirstContinue}
+                  accessibilityRole="button"
+                >
+                  <Text style={[styles.continueButtonText, styles.continueButtonTextActive]}>
+                    Continue
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.disclaimerText}>
+                  You can always change your name later
+                </Text>
+              </View>
+            )}
+
+            {/* Welcome Message - Shows after first continue */}
+            {showWelcomeMessage && (
+              <View style={styles.userMessageContainer}>
+                <TypingText 
+                  text={`Lovely to meet you, ${name.trim()}.`}
+                  style={styles.welcomeMessage}
+                  speed={45}
+                  showCursor={true}
+                  onComplete={() => setWelcomeTypingComplete(true)}
+                />
+              </View>
+            )}
+          </View>
+
+          {/* Requirements Section - Shows after welcome message typing completes */}
+          {showWelcomeMessage && welcomeTypingComplete && (
+            <View style={styles.requirementsSection}>
+              <TypingText 
+                text="A few things to know before we get started:"
+                style={styles.requirementsTitle}
+                speed={35}
+                delay={500}
+                showCursor={true}
+                onComplete={() => setShowPolicySection(true)}
+              />
 
               {/* Policy Section */}
-              <View style={styles.policySection}>
-                <View style={styles.policyIcon}>
-                  <Text style={styles.policyIconText}>✋</Text>
-                </View>
-                <View style={styles.policyContent}>
-                  <Text style={styles.policyText}>
-                    Nudge's{' '}
-                    <Text style={styles.policyLink}>Acceptable Use Policy</Text>
-                    {' '}prohibits using Nudge for harm, like producing violent, abusive, or deceptive content.
-                  </Text>
-                </View>
-              </View>
+              {showPolicySection && (
+                <>
+                  <View style={styles.policySection}>
+                    <View style={styles.policyIcon}>
+                      <Text style={styles.policyIconText}>✋</Text>
+                    </View>
+                    <View style={styles.policyContent}>
+                      <Text style={styles.policyText}>
+                        Nudge's{' '}
+                        <Text style={styles.policyLink}>Acceptable Use Policy</Text>
+                        {' '}prohibits using Nudge for harm, like producing violent, abusive, or deceptive content.
+                      </Text>
+                    </View>
+                  </View>
 
-              <View style={styles.policySection}>
-                <View style={styles.policyIcon}>
-                  <Text style={styles.policyIconText}>🛡️</Text>
-                </View>
-                <View style={styles.policyContent}>
-                  <Text style={styles.policyText}>
-                    Nudge regularly reviews conversations flagged by our automated abuse detection, and may use them to improve our safety systems.
-                  </Text>
-                </View>
-              </View>
+                  <View style={styles.policySection}>
+                    <View style={styles.policyIcon}>
+                      <Text style={styles.policyIconText}>🛡️</Text>
+                    </View>
+                    <View style={styles.policyContent}>
+                      <Text style={styles.policyText}>
+                        Nudge regularly reviews conversations flagged by our automated abuse detection, and may use them to improve our safety systems.
+                      </Text>
+                    </View>
+                  </View>
 
-              {/* Policy Acknowledgment */}
-              <TouchableOpacity
-                style={[styles.policyButton, isFormValid() && styles.policyButtonActive]}
-                onPress={handleContinue}
-                disabled={!isFormValid()}
-                accessibilityRole="button"
-              >
-                <Text style={[styles.policyButtonText, isFormValid() && styles.policyButtonTextActive]}>
-                  Acknowledge & Continue
-                </Text>
-              </TouchableOpacity>
-              
-              <Text style={styles.disclaimerText}>
-                You can always change your name later
-              </Text>
+                  {/* Final Policy Acknowledgment */}
+                  <TouchableOpacity
+                    style={[styles.policyButton, styles.policyButtonActive]}
+                    onPress={handleFinalContinue}
+                    accessibilityRole="button"
+                  >
+                    <Text style={[styles.policyButtonText, styles.policyButtonTextActive]}>
+                      Acknowledge & Continue
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           )}
         </ScrollView>
