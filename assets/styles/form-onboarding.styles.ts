@@ -1,4 +1,4 @@
-// Form Onboarding Styles - Nudge-inspired minimal design
+// Form Onboarding Styles - Claude-inspired minimal design
 // Clean typography, proper spacing, and safe area handling
 
 import { StyleSheet } from 'react-native';
@@ -199,7 +199,7 @@ export default StyleSheet.create({
   },
   
   policyButton: {
-    backgroundColor: '#111827',
+    backgroundColor: '#F3F4F6',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 24,
@@ -207,10 +207,14 @@ export default StyleSheet.create({
     alignItems: 'center',
   },
   
+  policyButtonActive: {
+    backgroundColor: '#111827',
+  },
+  
   policyButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#9CA3AF',
   },
   
   policyButtonTextActive: {
@@ -251,5 +255,6 @@ export default StyleSheet.create({
     fontSize: 13,
     color: '#9CA3AF',
     textAlign: 'center',
+    marginTop: 12,
   },
 });

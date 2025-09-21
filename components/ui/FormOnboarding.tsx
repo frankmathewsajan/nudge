@@ -1,223 +1,49 @@
-// Form Onboarding - Conversational chat with dynamic typing effects
-// Linear flow: name input → age confirmation → greeting → policy → acknowledge button
+// Form Onboarding - Nudge-style minimal form interface
+// Clean introduction form with name, age confirmation, and policy acknowledgment
 
 import styles from '@/assets/styles/form-onboarding.styles';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
-    Animated,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-interface Message {
-  id: string;
-  type: 'ai' | 'user';
-  content: string;
-  timestamp: number;
-}
 
 interface FormOnboardingProps {
   onComplete: (userName: string) => void;
 }
 
 export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [currentInput, setCurrentInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
-  const [step, setStep] = useState(0);
-  const [userName, setUserName] = useState('');
+  const [name, setName] = useState('');
   const [isAgeConfirmed, setIsAgeConfirmed] = useState(false);
-  const [isInputEnabled, setIsInputEnabled] = useState(false);
-  const [typingText, setTypingText] = useState('');
+  const [isPolicyAccepted, setIsPolicyAccepted] = useState(false);
   
-  const scrollViewRef = useRef<ScrollView>(null);
   const insets = useSafeAreaInsets();
-  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-  const typingSequence = [
-    "I'm...",
-    "I'm Nudge...",
-    "I'm Nudge, a next‑gen goal AI...",
-    "I'm Nudge, a next‑gen goal AI built to help you achieve your goals..."
-  ];
-
-  useEffect(() => {
-    // Start the conversation with typing effect
-    setTimeout(() => startTypingSequence(), 1000);
-    
-    // Animate screen in
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 500,
-      useNativeDriver: true,
-    }).start();
-  }, []);
-
-  const startTypingSequence = async () => {
-    setIsTyping(true);
-    
-    for (let i = 0; i < typingSequence.length; i++) {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setTypingText(typingSequence[i]);
-    }
-    
-    // Add final message to chat
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    addMessage('ai', typingSequence[typingSequence.length - 1]);
-    setIsTyping(false);
-    setTypingText('');
-    
-    // Ask for name
-    setTimeout(() => {
-      addMessage('ai', "What's your name?");
-      setIsInputEnabled(true);
-    }, 1000);
+  const isFormValid = () => {
+    return name.trim().length > 0 && isAgeConfirmed;
   };
 
-  const addMessage = (type: 'ai' | 'user', content: string) => {
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      type,
-      content,
-      timestamp: Date.now(),
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-    
-    // Auto-scroll to bottom
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  };
-
-  const handleSendMessage = () => {
-    if (!currentInput.trim()) return;
-
-    const userMessage = currentInput.trim();
-    addMessage('user', userMessage);
-    setCurrentInput('');
-    setIsInputEnabled(false);
-
-    if (step === 0) {
-      // Name input step
-      setUserName(userMessage);
-      setTimeout(() => {
-        addMessage('ai', `Are you 13 years or older, ${userMessage}?`);
-        setStep(1);
-        // Show age confirmation buttons instead of text input
-      }, 1000);
+  const handleContinue = () => {
+    if (name.trim().length > 0 && isAgeConfirmed) {
+      setIsPolicyAccepted(true);
+      onComplete(name.trim());
     }
   };
 
-  const handleAgeConfirmation = (confirmed: boolean) => {
-    if (confirmed) {
-      setIsAgeConfirmed(true);
-      addMessage('user', 'Yes, I am 13 or older');
-      
-      setTimeout(() => {
-        addMessage('ai', `Lovely to meet you, ${userName}!`);
-        
-        setTimeout(() => {
-          addMessage('ai', 'A few things to know before we start working together:');
-          
-          setTimeout(() => {
-            addMessage('ai', 'policy_section'); // Special identifier for policy section
-            setStep(2);
-          }, 1000);
-        }, 1000);
-      }, 1000);
-    } else {
-      addMessage('user', 'No, I am under 13');
-      setTimeout(() => {
-        addMessage('ai', 'I\'m sorry, but you must be at least 13 years old to use Nudge.');
-      }, 1000);
+  const getInitials = (fullName: string) => {
+    const names = fullName.trim().split(' ');
+    if (names.length === 1) {
+      return names[0].charAt(0).toUpperCase();
     }
-  };
-
-  const handleAcknowledgeAndContinue = () => {
-    onComplete(userName);
-  };
-
-  const renderMessage = (message: Message) => {
-    if (message.content === 'policy_section') {
-      return (
-        <View key={message.id} style={styles.policyMessageContainer}>
-          <View style={styles.aiMessageBubble}>
-            <View style={styles.policySection}>
-              <View style={styles.policyIcon}>
-                <Text style={styles.policyIconText}>⚠️</Text>
-              </View>
-              <Text style={styles.policyText}>
-                Nudge's{' '}
-                <Text style={styles.policyLink}>Acceptable Use Policy</Text>
-                {' '}prohibits using Nudge for harm, like producing violent, abusive, or deceptive content.
-              </Text>
-            </View>
-            
-            <View style={styles.policySection}>
-              <View style={styles.policyIcon}>
-                <Text style={styles.policyIconText}>🛡️</Text>
-              </View>
-              <Text style={styles.policyText}>
-                Nudge regularly reviews conversations flagged by our automated abuse detection, and may use them to improve our safety systems.
-              </Text>
-            </View>
-          </View>
-          
-          <TouchableOpacity
-            style={styles.acknowledgeButton}
-            onPress={handleAcknowledgeAndContinue}
-            accessibilityRole="button"
-          >
-            <Text style={styles.acknowledgeButtonText}>
-              Acknowledge & Continue
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
-
-    return (
-      <View key={message.id} style={[
-        styles.messageContainer,
-        message.type === 'ai' ? styles.aiMessageContainer : styles.userMessageContainer
-      ]}>
-        <View style={[
-          styles.messageBubble,
-          message.type === 'ai' ? styles.aiMessageBubble : styles.userMessageBubble
-        ]}>
-          <Text style={[
-            styles.messageText,
-            message.type === 'ai' ? styles.aiMessageText : styles.userMessageText
-          ]}>
-            {message.content}
-          </Text>
-        </View>
-      </View>
-    );
-  };
-
-  const renderTypingIndicator = () => {
-    if (!isTyping) return null;
-    
-    return (
-      <View style={styles.aiMessageContainer}>
-        <View style={styles.aiMessageBubble}>
-          <Text style={styles.aiMessageText}>
-            {typingText}
-            <Text style={styles.typingCursor}>|</Text>
-          </Text>
-        </View>
-      </View>
-    );
+    return (names[0].charAt(0) + (names[names.length - 1].charAt(0) || '')).toUpperCase();
   };
 
   return (
@@ -327,13 +153,13 @@ export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) =>
 
               {/* Policy Acknowledgment */}
               <TouchableOpacity
-                style={styles.policyButton}
-                onPress={handleAcknowledgeAndContinue}
-                disabled={!name.trim().length || !isAgeConfirmed}
+                style={[styles.policyButton, isFormValid() && styles.policyButtonActive]}
+                onPress={handleContinue}
+                disabled={!isFormValid()}
                 accessibilityRole="button"
               >
-                <Text style={[styles.policyButtonText, (name.trim().length > 0 && isAgeConfirmed) && styles.policyButtonTextActive]}>
-                  {!isPolicyAccepted ? 'Acknowledge & Continue' : 'Continue'}
+                <Text style={[styles.policyButtonText, isFormValid() && styles.policyButtonTextActive]}>
+                  Acknowledge & Continue
                 </Text>
               </TouchableOpacity>
               
