@@ -10,11 +10,11 @@ import { SafeAreaView, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createFormOnboardingStyles } from '../../assets/styles/form-onboarding-dynamic.styles';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useOnboardingAnimationController } from '../../hooks/useOnboardingAnimationController';
-import { useOnboardingFormController } from '../../hooks/useOnboardingFormController';
-import AnimatedBackground from './AnimatedBackground';
+import { useOnboardingAnimationController } from '../../hooks/onboarding/useOnboardingAnimationController';
+import { useOnboardingFormController } from '../../hooks/onboarding/useOnboardingFormController';
+import AnimatedBackground from '../ui/AnimatedBackground';
+import { ThemeToggle } from '../ui/ThemeToggle';
 import { OnboardingContent } from './OnboardingContent';
-import { ThemeToggle } from './ThemeToggle';
 
 interface FormOnboardingProps {
   onComplete: (userName: string) => void;

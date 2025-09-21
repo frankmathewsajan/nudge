@@ -1,13 +1,14 @@
-// Home Screen - Material You Knowledge Search Interface
-// With form-based onboarding flow
+// Home Screen - Goal Collection Interface
+// Clean onboarding flow followed by goal collection
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { FormOnboarding } from '../../components/ui/FormOnboarding';
-import { KnowledgeSearchScreen } from '../../components/ui/KnowledgeSearchScreen';
+import { GoalCollectionScreen } from '../../components/goals/GoalCollectionScreen';
+import { FormOnboarding } from '../../components/onboarding/FormOnboarding';
 
 export default function HomeScreen() {
   const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showGoalCollection, setShowGoalCollection] = useState(false);
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -18,11 +19,16 @@ export default function HomeScreen() {
   const checkOnboardingStatus = async () => {
     try {
       const completed = await AsyncStorage.getItem('@nudge_onboarding_completed');
+      const goalsCompleted = await AsyncStorage.getItem('@nudge_goals_completed');
       const storedName = await AsyncStorage.getItem('@nudge_user_name');
       
       if (completed === 'true' && storedName) {
-        setShowOnboarding(false);
         setUserName(storedName);
+        setShowOnboarding(false);
+        
+        if (goalsCompleted !== 'true') {
+          setShowGoalCollection(true);
+        }
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error);
@@ -36,30 +42,34 @@ export default function HomeScreen() {
       await AsyncStorage.setItem('@nudge_user_name', name);
       setUserName(name);
       setShowOnboarding(false);
+      setShowGoalCollection(true); // Show goal collection after onboarding
     } catch (error) {
       console.error('Error saving onboarding completion:', error);
     }
   };
 
-  const handleSearch = (query: string) => {
-    console.log('Search query:', query);
-    // TODO: Implement search functionality
+  const handleGoalsComplete = async (goals: any[]) => {
+    try {
+      await AsyncStorage.setItem('@nudge_goals_completed', 'true');
+      await AsyncStorage.setItem('@nudge_user_goals', JSON.stringify(goals));
+      setShowGoalCollection(false);
+      console.log('Goals collection completed:', goals);
+      // TODO: Navigate to main app or dashboard
+    } catch (error) {
+      console.error('Error saving goals:', error);
+    }
   };
 
-  const handleVoiceSearch = async () => {
-    console.log('Voice search activated');
+  // Reset function for development/testing
+  const resetOnboarding = async () => {
     try {
       await AsyncStorage.setItem('@nudge_onboarding_completed', 'false');
-      
+      await AsyncStorage.setItem('@nudge_goals_completed', 'false');
       setShowOnboarding(true);
+      setShowGoalCollection(false);
     } catch (error) {
-      console.error('Error saving onboarding completion:', error);
+      console.error('Error resetting onboarding:', error);
     }
-  };
-
-  const handleCameraSearch = () => {
-    console.log('Camera search activated');
-    // TODO: Implement camera search
   };
 
   if (isLoading) {
@@ -70,11 +80,10 @@ export default function HomeScreen() {
     return <FormOnboarding onComplete={handleOnboardingComplete} />;
   }
 
-  return (
-    <KnowledgeSearchScreen
-      onSearch={handleSearch}
-      onVoiceSearch={handleVoiceSearch}
-      onCameraSearch={handleCameraSearch}
-    />
-  );
+  if (showGoalCollection) {
+    return <GoalCollectionScreen onComplete={handleGoalsComplete} />;
+  }
+
+  // Main app content (placeholder for now)
+  return <GoalCollectionScreen onComplete={handleGoalsComplete} />;
 }

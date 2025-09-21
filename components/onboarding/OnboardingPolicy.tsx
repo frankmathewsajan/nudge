@@ -8,8 +8,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { OnboardingStep } from '../../hooks/useOnboardingAnimationController';
-import { TypingText } from './TypingText';
+import { OnboardingStep } from '../../hooks/onboarding/useOnboardingAnimationController';
+import { TypingText } from '../ui/TypingText';
 
 interface OnboardingPolicyProps {
   currentStep: OnboardingStep;

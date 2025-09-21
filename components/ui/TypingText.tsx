@@ -7,7 +7,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Animated, Text, TextStyle, View } from 'react-native';
-import { useTypingAnimation } from '../../hooks/useTypingAnimation';
+import { useTypingAnimation } from '../../hooks/onboarding/useTypingAnimation';
 
 interface TypingTextProps {
   text: string;

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { OnboardingStep } from '../../hooks/useOnboardingAnimationController';
+import { OnboardingStep } from '../../hooks/onboarding/useOnboardingAnimationController';
 
 interface OnboardingFormProps {
   currentStep: OnboardingStep;

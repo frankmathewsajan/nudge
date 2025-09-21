@@ -7,8 +7,8 @@
 
 import React from 'react';
 import { Text, View } from 'react-native';
-import { OnboardingStep } from '../../hooks/useOnboardingAnimationController';
-import { TypingText } from './TypingText';
+import { OnboardingStep } from '../../hooks/onboarding/useOnboardingAnimationController';
+import { TypingText } from '../ui/TypingText';
 
 interface OnboardingHeaderProps {
   currentStep: OnboardingStep;

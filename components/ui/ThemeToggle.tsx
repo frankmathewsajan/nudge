@@ -5,8 +5,9 @@
  * Positioned within safe area for proper accessibility.
  */
 
+import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 
 interface ThemeToggleProps {
   onToggle: () => void;
@@ -37,16 +38,14 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
     elevation: 3,
   };
 
-  const textStyle = {
-    fontSize: 20,
-  };
-
   return (
     <View style={toggleStyle}>
       <TouchableOpacity onPress={onToggle}>
-        <Text style={textStyle}>
-          {theme.name === 'light' ? '🌙' : '☀️'}
-        </Text>
+        <MaterialIcons 
+          name={theme.name === 'light' ? 'nightlight-round' : 'wb-sunny'} 
+          size={24} 
+          color={theme.colors.textPrimary} 
+        />
       </TouchableOpacity>
     </View>
   );
