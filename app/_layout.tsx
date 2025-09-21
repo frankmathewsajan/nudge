@@ -1,12 +1,12 @@
+import config from '@/tamagui.config';
+import { handleNotificationResponse, setupNotificationCategories } from '@/utils/notifications';
+import { initializeSleepState } from '@/utils/sleepState';
 import { TamaguiProvider } from '@tamagui/core';
 import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import config from '../tamagui.config';
-import { handleNotificationResponse, setupNotificationCategories } from '../utils/notifications';
-import { initializeSleepState } from '../utils/sleepState';
 
 // Hook for observing notification events - following latest SDK pattern
 function useNotificationObserver() {

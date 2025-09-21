@@ -16,24 +16,6 @@ export default function TabLayout() {
           title: 'Home',
         }}
       />
-      <Tabs.Screen
-        name="track"
-        options={{
-          title: 'Track',
-        }}
-      />
-      <Tabs.Screen
-        name="goals"
-        options={{
-          title: 'Goals',
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Settings',
-        }}
-      />
     </Tabs>
   );
 }
