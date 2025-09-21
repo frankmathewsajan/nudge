@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Polygon, Stop } from 'react-native-svg';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -9,11 +10,12 @@ interface AnimatedBackgroundProps {
 }
 
 const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'moderate' }) => {
+  const { theme } = useTheme();
+  
   // Animation values
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const orbitAnim = useRef(new Animated.Value(0)).current;
-  const rippleAnim = useRef(new Animated.Value(0)).current;
 
   // Create hexagon points for hexagonal grid
   const createHexagonPoints = (centerX: number, centerY: number, radius: number) => {
@@ -71,28 +73,10 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
     return orbits;
   };
 
-  // Generate ripple waves
-  const generateRipples = () => {
-    const ripples = [];
-    const numRipples = intensity === 'subtle' ? 2 : intensity === 'moderate' ? 3 : 4;
-    
-    for (let i = 0; i < numRipples; i++) {
-      const centerX = screenWidth * (0.1 + Math.random() * 0.8);
-      const centerY = screenHeight * (0.2 + Math.random() * 0.6);
-      
-      ripples.push({
-        id: `ripple-${i}`,
-        centerX,
-        centerY,
-        delay: i * 1000,
-      });
-    }
-    return ripples;
-  };
+
 
   const hexGrid = generateHexGrid();
   const orbits = generateOrbits();
-  const ripples = generateRipples();
 
   useEffect(() => {
     // Continuous rotation animation
@@ -129,37 +113,18 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
       })
     );
 
-    // Ripple animation
-    const rippleAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(rippleAnim, {
-          toValue: 1,
-          duration: 4000,
-          useNativeDriver: true,
-        }),
-        Animated.delay(2000),
-        Animated.timing(rippleAnim, {
-          toValue: 0,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
     // Start all animations
     rotateAnimation.start();
     pulseAnimation.start();
     orbitAnimation.start();
-    rippleAnimation.start();
 
     // Cleanup
     return () => {
       rotateAnimation.stop();
       pulseAnimation.stop();
       orbitAnimation.stop();
-      rippleAnimation.stop();
     };
-  }, [rotateAnim, pulseAnim, orbitAnim, rippleAnim]);
+  }, [rotateAnim, pulseAnim, orbitAnim]);
 
   // Interpolated values
   const rotation = rotateAnim.interpolate({
@@ -182,16 +147,6 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
     outputRange: ['0deg', '360deg'],
   });
 
-  const rippleScale = rippleAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, 3],
-  });
-
-  const rippleOpacity = rippleAnim.interpolate({
-    inputRange: [0, 0.7, 1],
-    outputRange: [0.4, 0.1, 0],
-  });
-
   return (
     <View style={styles.container}>
       {/* Hexagonal Grid Layer */}
@@ -207,9 +162,9 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
         <Svg height={screenHeight * 1.5} width={screenWidth * 1.5} style={styles.svg}>
           <Defs>
             <LinearGradient id="hexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#64748B" stopOpacity="0.15" />
-              <Stop offset="50%" stopColor="#F59E0B" stopOpacity="0.25" />
-              <Stop offset="100%" stopColor="#CBD5E1" stopOpacity="0.15" />
+              <Stop offset="0%" stopColor={theme.colors.animationSecondary} stopOpacity="0.15" />
+              <Stop offset="50%" stopColor={theme.colors.animationPrimary} stopOpacity="0.25" />
+              <Stop offset="100%" stopColor={theme.colors.animationTertiary} stopOpacity="0.15" />
             </LinearGradient>
           </Defs>
           {hexGrid.map((hex) => (
@@ -236,9 +191,9 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
         <Svg height={screenHeight} width={screenWidth} style={styles.svg}>
           <Defs>
             <LinearGradient id="orbitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <Stop offset="0%" stopColor="#F59E0B" stopOpacity="0" />
-              <Stop offset="50%" stopColor="#F59E0B" stopOpacity="0.3" />
-              <Stop offset="100%" stopColor="#F59E0B" stopOpacity="0" />
+              <Stop offset="0%" stopColor={theme.colors.animationPrimary} stopOpacity="0" />
+              <Stop offset="50%" stopColor={theme.colors.animationPrimary} stopOpacity="0.3" />
+              <Stop offset="100%" stopColor={theme.colors.animationPrimary} stopOpacity="0" />
             </LinearGradient>
           </Defs>
           {orbits.map((orbit) => (
@@ -256,48 +211,10 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
                 cx={orbit.centerX + orbit.radius}
                 cy={orbit.centerY}
                 r="3"
-                fill="#F59E0B"
+                fill={theme.colors.animationPrimary}
                 opacity={orbit.opacity * 2}
               />
             </G>
-          ))}
-        </Svg>
-      </Animated.View>
-
-      {/* Ripple Waves Layer */}
-      <Animated.View style={styles.rippleLayer}>
-        <Svg height={screenHeight} width={screenWidth} style={styles.svg}>
-          <Defs>
-            <LinearGradient id="rippleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <Stop offset="0%" stopColor="#CBD5E1" stopOpacity="0" />
-              <Stop offset="50%" stopColor="#CBD5E1" stopOpacity="0.4" />
-              <Stop offset="100%" stopColor="#CBD5E1" stopOpacity="0" />
-            </LinearGradient>
-          </Defs>
-          {ripples.map((ripple, index) => (
-            <Animated.View
-              key={ripple.id}
-              style={[
-                styles.ripple,
-                {
-                  left: ripple.centerX - 50,
-                  top: ripple.centerY - 50,
-                  transform: [{ scale: rippleScale }],
-                  opacity: rippleOpacity,
-                },
-              ]}
-            >
-              <Svg height={100} width={100}>
-                <Circle
-                  cx="50"
-                  cy="50"
-                  r="30"
-                  fill="none"
-                  stroke="url(#rippleGradient)"
-                  strokeWidth="1"
-                />
-              </Svg>
-            </Animated.View>
           ))}
         </Svg>
       </Animated.View>
@@ -319,7 +236,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
               cx={Math.random() * screenWidth}
               cy={Math.random() * screenHeight}
               r={Math.random() * 2 + 0.5}
-              fill="#F59E0B"
+              fill={theme.colors.animationPrimary}
               opacity={Math.random() * 0.3 + 0.1}
             />
           ))}
@@ -355,24 +272,12 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
   },
-  rippleLayer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
   particleLayer: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-  },
-  ripple: {
-    position: 'absolute',
-    width: 100,
-    height: 100,
   },
 });
 

@@ -7,6 +7,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemeProvider } from '../contexts/ThemeContext';
 
 // Hook for observing notification events - following latest SDK pattern
 function useNotificationObserver() {
@@ -55,12 +56,14 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <TamaguiProvider config={config}>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </TamaguiProvider>
+      <ThemeProvider>
+        <TamaguiProvider config={config}>
+          <Stack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </TamaguiProvider>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
