@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Animated, Dimensions, StyleSheet } from 'react-native';
-import Svg, { Circle, Polygon, G, Defs, LinearGradient, Stop } from 'react-native-svg';
+import { Animated, Dimensions, StyleSheet, View } from 'react-native';
+import Svg, { Circle, Defs, G, LinearGradient, Polygon, Stop } from 'react-native-svg';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 

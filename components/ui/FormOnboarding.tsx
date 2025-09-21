@@ -15,8 +15,8 @@ import {
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { TypingText } from './TypingText';
 import AnimatedBackground from './AnimatedBackground';
+import { TypingText } from './TypingText';
 
 interface FormOnboardingProps {
   onComplete: (userName: string) => void;
