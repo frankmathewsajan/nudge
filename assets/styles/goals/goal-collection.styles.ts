@@ -24,20 +24,22 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     paddingTop: 60,
   },
 
-  // Clean icon/logo area - Dark theme
+  // Clean icon/logo area - Enhanced with vibrant gradient-like effects
   iconContainer: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: theme.colors.textPrimary, // Dark color instead of accent
+    backgroundColor: theme.colors.accentVibrant,     // Use vibrant cyan/blue
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 32,
-    shadowColor: theme.colors.textPrimary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 8,
+    shadowColor: theme.colors.accentVibrant,
+    shadowOffset: { width: 0, height: 12 },         // Stronger shadow
+    shadowOpacity: 0.25,                            // More prominent
+    shadowRadius: 32,                               // Larger glow
+    elevation: 12,
+    borderWidth: 2,
+    borderColor: theme.colors.accent,               // Gold border for contrast
   },
 
   iconSymbol: {
@@ -71,33 +73,34 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     paddingBottom: 32,
   },
 
-  // Chat-style input container
+  // Chat-style input container - Enhanced with vibrant colors
   inputContainer: {
     backgroundColor: theme.colors.inputBackground,
     borderRadius: 24,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: theme.colors.inputBorder,
     paddingHorizontal: 20,
     paddingVertical: 16,
     minHeight: 56,
-    shadowColor: theme.colors.textTertiary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowColor: theme.colors.accentVibrant,    // Vibrant shadow color
+    shadowOffset: { width: 0, height: 4 },      // Stronger shadow
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
     flexDirection: 'row',
     alignItems: 'center',
   },
 
   inputContainerFocused: {
-    borderColor: theme.colors.accent,
-    shadowColor: theme.colors.accent,
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 4,
+    borderColor: theme.colors.accentVibrant,     // Use vibrant cyan/blue
+    shadowColor: theme.colors.accentVibrant,
+    shadowOpacity: 0.2,                         // More pronounced shadow
+    shadowRadius: 16,
+    elevation: 6,
+    borderWidth: 2,                             // Thicker border when focused
   },
 
-  // Text input
+  // Text input - Fixed contrast issues
   textInput: {
     flex: 1,
     fontSize: 16,
@@ -123,7 +126,12 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
   },
 
   sendButton: {
-    backgroundColor: theme.colors.textPrimary, // Dark color instead of accent
+    backgroundColor: theme.colors.accentVibrant, // Use vibrant cyan/blue
+    shadowColor: theme.colors.accentVibrant,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
   },
 
   sendButtonDisabled: {
@@ -198,14 +206,25 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     paddingHorizontal: 20, // More horizontal padding
     paddingVertical: 12, // More vertical padding
     marginRight: 16, // More space between pills
-    borderWidth: 1,
-    borderColor: theme.colors.inputBorder,
-    shadowColor: theme.colors.textPrimary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: theme.colors.accentSoft,          // Purple border for elegance
+    shadowColor: theme.colors.accentSoft,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 3,
     minWidth: 80, // Minimum width to prevent squashing
+  },
+
+  examplePillSelected: {
+    backgroundColor: theme.colors.accentVibrant,   // Vibrant cyan when selected
+    borderColor: theme.colors.accent,             // Gold border when selected
+    shadowColor: theme.colors.accentVibrant,
+    shadowOpacity: theme.name === 'dark' ? 0.4 : 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+    transform: [{ scale: 1.02 }], // Slight scale for selected state
+    borderWidth: 2,
   },
 
   examplePillText: {
@@ -213,5 +232,49 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     color: theme.colors.textSecondary,
     fontWeight: '500',
     textAlign: 'center',
+  },
+
+  examplePillTextSelected: {
+    color: theme.name === 'dark' ? '#0F172A' : '#FFFFFF', // Ensure contrast
+    fontWeight: '600',
+  },
+
+  // Tab styles
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: 8,
+    margin: 16,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: theme.colors.inputBorder,
+  },
+
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    gap: 8,
+  },
+
+  activeTab: {
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.accentVibrant,
+  },
+
+  tabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: theme.colors.textSecondary,
+  },
+
+  activeTabText: {
+    color: theme.colors.accentVibrant,
+    fontWeight: '600',
   },
 });

@@ -24,8 +24,13 @@ import { createGoalCollectionStyles } from '../../assets/styles/goals/goal-colle
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGoalCollection } from '../../hooks/goals/useGoalCollection';
 import { useKeyboardAware } from '../../hooks/goals/useKeyboardAware';
+import { analyzeGoalWithGemini, createSmartGoalSummary, GoalAnalysisResponse } from '../../services/geminiService';
+import { storageService } from '../../services/storageService';
 import AnimatedBackground from '../ui/AnimatedBackground';
+import { TerminalLoader } from '../ui/TerminalLoader';
 import { ThemeToggle } from '../ui/ThemeToggle';
+import { GoalHistoryTab } from './GoalHistoryTab';
+import { GoalPlanningScreen } from './GoalPlanningScreen';
 
 interface GoalCollectionScreenProps {
   onComplete?: (goals: any[]) => void;
@@ -49,13 +54,149 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   const keyboard = useKeyboardAware();
   
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showPlanningScreen, setShowPlanningScreen] = useState(false);
+  const [currentPlanningGoal, setCurrentPlanningGoal] = useState<string>('');
+  const [goalAnalysis, setGoalAnalysis] = useState<GoalAnalysisResponse | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
+  const [canRetry, setCanRetry] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [currentGoalText, setCurrentGoalText] = useState<string>('');
+  const [showTerminalLoader, setShowTerminalLoader] = useState(false);
+  const [terminalStage, setTerminalStage] = useState<'analyzing' | 'parsing' | 'success' | 'error'>('analyzing');
+  const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
+  const [selectedChip, setSelectedChip] = useState<string | null>(null);
   const inputRef = useRef<TextInput>(null);
   const animatedValue = useRef(new Animated.Value(1)).current;
+  
+  // Icon animation values with Material physics
+  const iconPulseValue = useRef(new Animated.Value(1)).current;
+  const iconScaleValue = useRef(new Animated.Value(1)).current;
+  const iconOpacityValue = useRef(new Animated.Value(0.8)).current;
+  
+  // Chip animation values for state feedback
+  const chipAnimationValues = useRef(new Map()).current;
+  
+  // Input field state layer animation
+  const inputStateValue = useRef(new Animated.Value(0)).current;
+
+  // Retry analysis function
+  const retryAnalysis = async () => {
+    if (!currentGoalText || retryCount >= 3) return;
+    
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+    setRetryCount(prev => prev + 1);
+    setShowTerminalLoader(true);
+    setTerminalStage('analyzing');
+    
+    try {
+      console.log('Retrying goal analysis... attempt:', retryCount + 1);
+      
+      setTimeout(() => {
+        if (setTerminalStage) setTerminalStage('parsing');
+      }, 2000);
+      
+      const analysis = await analyzeGoalWithGemini(currentGoalText);
+      setTerminalStage('success');
+      setGoalAnalysis(analysis);
+      setCanRetry(false);
+      setRetryCount(0);
+      console.log('Retry successful');
+      
+      setTimeout(() => {
+        setShowTerminalLoader(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Retry failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze goal';
+      const shouldRetry = (error as any)?.shouldRetry && retryCount < 2;
+      
+      setTerminalStage('error');
+      setAnalysisError(errorMessage);
+      setCanRetry(shouldRetry);
+      
+      setTimeout(() => {
+        setShowTerminalLoader(false);
+        if (!shouldRetry) {
+          setGoalAnalysis(null);
+        }
+      }, 2000);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   // Business logic separation
   const goalController = useGoalCollection(
-    (goal) => {
+    async (goal) => {
       console.log('Goal submitted:', goal);
+      setCurrentGoalText(goal.text);
+      setRetryCount(0);
+      
+      // Create smart summary for the goal first
+      let goalSummary = goal.text;
+      try {
+        console.log('Creating AI-powered goal summary...');
+        goalSummary = await createSmartGoalSummary(goal.text);
+        console.log('Smart summary created:', goalSummary);
+      } catch (error) {
+        console.log('Failed to create AI summary, using original text');
+      }
+      
+      setCurrentPlanningGoal(goalSummary);
+      
+      // Start analyzing the goal with Gemini AI
+      setIsAnalyzing(true);
+      setAnalysisError(null);
+      setCanRetry(false);
+      setShowTerminalLoader(true);
+      setTerminalStage('analyzing');
+      
+      try {
+        console.log('Starting goal analysis with Gemini...');
+        
+        // Simulate parsing stage after some delay
+        setTimeout(() => {
+          if (setTerminalStage) setTerminalStage('parsing');
+        }, 3000);
+        
+        const analysis = await analyzeGoalWithGemini(goal.text);
+        setTerminalStage('success');
+        setGoalAnalysis(analysis);
+        console.log('Goal analysis completed successfully');
+        
+        // Save to history
+        try {
+          await storageService.saveGoalAnalysis(goal.text, goalSummary, analysis);
+          console.log('Goal analysis saved to history');
+        } catch (error) {
+          console.error('Failed to save goal analysis to history:', error);
+        }
+        
+        // Show success for a moment before proceeding
+        setTimeout(() => {
+          setShowTerminalLoader(false);
+          setShowPlanningScreen(true);
+        }, 1500);
+      } catch (error) {
+        console.error('Failed to analyze goal:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to analyze goal';
+        const shouldRetry = (error as any)?.shouldRetry;
+        
+        setTerminalStage('error');
+        setAnalysisError(errorMessage);
+        setCanRetry(shouldRetry);
+        
+        // Show error for a moment before proceeding with fallback
+        setTimeout(() => {
+          setShowTerminalLoader(false);
+          setGoalAnalysis(null);
+          setShowPlanningScreen(true);
+        }, 2000);
+      } finally {
+        setIsAnalyzing(false);
+      }
     },
     (allGoals) => {
       console.log('All goals collected:', allGoals);
@@ -89,6 +230,56 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   const scrollRef1 = useRef<ScrollView>(null);
   const scrollRef2 = useRef<ScrollView>(null);
   const [isPaused, setIsPaused] = useState(false);
+
+  // Icon breathing pulse animation - Material physics system
+  useEffect(() => {
+    const createBreathingAnimation = () => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(iconPulseValue, {
+            toValue: 1.08,
+            duration: 2800, // Slow breathing rhythm
+            useNativeDriver: true,
+          }),
+          Animated.timing(iconPulseValue, {
+            toValue: 1,
+            duration: 2800,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+    };
+
+    const breathingAnimation = createBreathingAnimation();
+    breathingAnimation.start();
+
+    return () => breathingAnimation.stop();
+  }, [iconPulseValue]);
+
+  // Icon glow animation synchronized with pulse
+  useEffect(() => {
+    const createGlowAnimation = () => {
+      return Animated.loop(
+        Animated.sequence([
+          Animated.timing(iconOpacityValue, {
+            toValue: 1,
+            duration: 2800,
+            useNativeDriver: true,
+          }),
+          Animated.timing(iconOpacityValue, {
+            toValue: 0.7,
+            duration: 2800,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+    };
+
+    const glowAnimation = createGlowAnimation();
+    glowAnimation.start();
+
+    return () => glowAnimation.stop();
+  }, [iconOpacityValue]);
 
   // Auto-scroll setup with seamless continuous scrolling
   useEffect(() => {
@@ -137,6 +328,44 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   }, [keyboard.isVisible, isPaused, row1Examples.length, row2Examples.length]);
 
   const handleExampleClick = (example: string) => {
+    setSelectedChip(example);
+    
+    // Animate chip selection with Material physics
+    const chipKey = `chip-${example}`;
+    let animationValue = chipAnimationValues.get(chipKey);
+    
+    if (!animationValue) {
+      animationValue = new Animated.Value(1);
+      chipAnimationValues.set(chipKey, animationValue);
+    }
+
+    // Scale-in and color morph animation (180-220ms)
+    Animated.sequence([
+      Animated.spring(animationValue, {
+        toValue: 0.94, // Slight scale down
+        useNativeDriver: true,
+        tension: 300, // Material physics - high tension for snappy feel
+        friction: 20,  // Material physics - medium friction for natural damping
+      }),
+      Animated.spring(animationValue, {
+        toValue: 1.05, // Scale up slightly beyond normal
+        useNativeDriver: true,
+        tension: 200,
+        friction: 12, // Lower friction for bounce
+      }),
+      Animated.spring(animationValue, {
+        toValue: 1, // Return to normal
+        useNativeDriver: true,
+        tension: 300,
+        friction: 25,
+      })
+    ]).start(() => {
+      // Clear selection after animation
+      setTimeout(() => {
+        setSelectedChip(null);
+      }, 500);
+    });
+
     goalController.handlers.updateCurrentGoal(example);
     inputRef.current?.focus();
     
@@ -156,17 +385,138 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   }, [keyboard.isVisible, keyboard.animationDuration, animatedValue]);
 
   const handleSubmit = () => {
+    // Spring "lock-in" animation when goal is submitted
+    Animated.sequence([
+      Animated.spring(iconScaleValue, {
+        toValue: 0.85, // Compress
+        useNativeDriver: true,
+        tension: 400, // High tension for quick compression
+        friction: 25,
+      }),
+      Animated.spring(iconScaleValue, {
+        toValue: 1.15, // Expand beyond normal
+        useNativeDriver: true,
+        tension: 200, // Lower tension for satisfying bounce
+        friction: 15,
+      }),
+      Animated.spring(iconScaleValue, {
+        toValue: 1, // Lock into final position
+        useNativeDriver: true,
+        tension: 300,
+        friction: 30, // Higher friction for solid "lock" feeling
+      })
+    ]).start();
+
     goalController.handlers.submitGoal();
     inputRef.current?.blur();
   };
 
   const handleInputFocus = () => {
     setIsInputFocused(true);
+    
+    // Material 3 state layer animation - focus state
+    Animated.spring(inputStateValue, {
+      toValue: 1,
+      useNativeDriver: false, // Using backgroundColor which requires layout
+      tension: 400,
+      friction: 30,
+    }).start();
   };
 
   const handleInputBlur = () => {
     setIsInputFocused(false);
+    
+    // Material 3 state layer animation - unfocus state
+    Animated.spring(inputStateValue, {
+      toValue: 0,
+      useNativeDriver: false,
+      tension: 300,
+      friction: 25,
+    }).start();
   };
+
+  // Planning screen handlers
+  const handleBackToGoals = () => {
+    setShowPlanningScreen(false);
+    setCurrentPlanningGoal('');
+    setGoalAnalysis(null);
+    setIsAnalyzing(false);
+    setAnalysisError(null);
+    setCanRetry(false);
+    setRetryCount(0);
+    setCurrentGoalText('');
+    setShowTerminalLoader(false);
+    setTerminalStage('analyzing');
+  };
+
+  const handleTabChange = (tab: 'create' | 'history') => {
+    setActiveTab(tab);
+  };
+
+  const handleSelectHistoryGoal = (goalSummary: string, analysis: GoalAnalysisResponse) => {
+    setCurrentPlanningGoal(goalSummary);
+    setGoalAnalysis(analysis);
+    setShowPlanningScreen(true);
+  };
+
+  const handleSetupAlarms = () => {
+    // TODO: Implement alarm setup
+    console.log('Setup alarms for goal:', currentPlanningGoal);
+  };
+
+  const handleStartNow = () => {
+    // TODO: Implement start session
+    console.log('Start working on goal:', currentPlanningGoal);
+  };
+
+  // Show terminal loader during analysis
+  if (showTerminalLoader) {
+    return (
+      <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+        <StatusBar 
+          barStyle={theme.name === 'dark' ? 'light-content' : 'dark-content'} 
+          backgroundColor={theme.colors.background} 
+        />
+        
+        <AnimatedBackground intensity="subtle" />
+        <ThemeToggle onToggle={toggleTheme} theme={theme} safeAreaTop={insets.top} />
+        
+        <View style={styles.container}>
+          <View style={styles.headerSection}>
+            <Text style={styles.mainHeading}>Analyzing your goal...</Text>
+          </View>
+          
+          <TerminalLoader
+            theme={theme}
+            isVisible={showTerminalLoader}
+            stage={terminalStage}
+            errorMessage={analysisError || undefined}
+            onComplete={() => {
+              console.log('Terminal loading completed');
+            }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show planning screen if a goal was submitted
+  if (showPlanningScreen && currentPlanningGoal) {
+    return (
+      <GoalPlanningScreen
+        goal={currentPlanningGoal}
+        goalAnalysis={goalAnalysis}
+        isAnalyzing={isAnalyzing}
+        analysisError={analysisError}
+        canRetry={canRetry}
+        retryCount={retryCount}
+        onBack={handleBackToGoals}
+        onSetupAlarms={handleSetupAlarms}
+        onStartNow={handleStartNow}
+        onRetry={retryAnalysis}
+      />
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
@@ -180,6 +530,50 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       
       <ThemeToggle onToggle={toggleTheme} theme={theme} safeAreaTop={insets.top} />
       
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'create' && styles.activeTab]}
+          onPress={() => handleTabChange('create')}
+        >
+          <MaterialIcons 
+            name="add-circle-outline" 
+            size={20} 
+            color={activeTab === 'create' ? theme.colors.accentVibrant : theme.colors.textSecondary} 
+          />
+          <Text style={[
+            styles.tabText,
+            activeTab === 'create' && styles.activeTabText
+          ]}>
+            Create Goal
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'history' && styles.activeTab]}
+          onPress={() => handleTabChange('history')}
+        >
+          <MaterialIcons 
+            name="history" 
+            size={20} 
+            color={activeTab === 'history' ? theme.colors.accentVibrant : theme.colors.textSecondary} 
+          />
+          <Text style={[
+            styles.tabText,
+            activeTab === 'history' && styles.activeTabText
+          ]}>
+            History
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
+      {/* Tab Content */}
+      {activeTab === 'history' ? (
+        <GoalHistoryTab
+          theme={theme}
+          onSelectGoal={handleSelectHistoryGoal}
+        />
+      ) : (
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -192,14 +586,24 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
             { transform: [{ scale: animatedValue }] }
           ]}
         >
-          {/* Clean Icon */}
-          <View style={styles.iconContainer}>
+          {/* Clean Icon with Breathing Pulse and Lock-in Animation */}
+          <Animated.View 
+            style={[
+              styles.iconContainer,
+              {
+                transform: [
+                  { scale: Animated.multiply(iconPulseValue, iconScaleValue) }
+                ],
+                opacity: iconOpacityValue,
+              }
+            ]}
+          >
             <MaterialIcons 
               name="gps-fixed" 
               size={36} 
-              color="#FFFFFF" 
+              color={theme.name === 'dark' ? '#0F172A' : '#FFFFFF'} // White icon for vibrant background
             />
-          </View>
+          </Animated.View>
           
           {/* Main Heading */}
           <Text style={styles.mainHeading}>
@@ -218,18 +622,45 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
                 contentContainerStyle={styles.exampleRowContent}
                 scrollEventThrottle={16}
               >
-                {row1Duplicated.map((example, index) => (
-                  <TouchableOpacity
-                    key={`row1-${index}`}
-                    style={[
-                      styles.examplePill,
-                      { marginLeft: index === 0 ? 0 : 0 } // Remove extra margin, use padding instead
-                    ]}
-                    onPress={() => handleExampleClick(example)}
-                  >
-                    <Text style={styles.examplePillText}>{example}</Text>
-                  </TouchableOpacity>
-                ))}
+                {row1Duplicated.map((example, index) => {
+                  const chipKey = `chip-${example}`;
+                  const animationValue = chipAnimationValues.get(chipKey) || new Animated.Value(1);
+                  const isSelected = selectedChip === example;
+                  
+                  return (
+                    <Animated.View
+                      key={`row1-${index}`}
+                      style={{
+                        transform: [{ scale: animationValue }],
+                        marginLeft: index === 0 ? 0 : 0,
+                      }}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.examplePill,
+                          isSelected && styles.examplePillSelected,
+                          {
+                            backgroundColor: isSelected 
+                              ? theme.colors.accentVibrant 
+                              : theme.colors.backgroundSecondary,
+                            borderColor: isSelected 
+                              ? theme.colors.accent 
+                              : theme.colors.accentSoft,
+                          }
+                        ]}
+                        onPress={() => handleExampleClick(example)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[
+                          styles.examplePillText,
+                          isSelected && styles.examplePillTextSelected,
+                        ]}>
+                          {example}
+                        </Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  );
+                })}
               </ScrollView>
               
               {/* Row 2 - Right to Left Scroll */}
@@ -241,21 +672,46 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
                 contentContainerStyle={styles.exampleRowContent}
                 scrollEventThrottle={16}
               >
-                {row2Duplicated.map((example, index) => (
-                  <TouchableOpacity
-                    key={`row2-${index}`}
-                    style={[
-                      styles.examplePill,
-                      { 
-                        marginLeft: 0, // Clean consistent spacing
-                        marginTop: index % 4 === 0 ? 2 : 0 // Subtle random vertical offset
-                      }
-                    ]}
-                    onPress={() => handleExampleClick(example)}
-                  >
-                    <Text style={styles.examplePillText}>{example}</Text>
-                  </TouchableOpacity>
-                ))}
+                {row2Duplicated.map((example, index) => {
+                  const chipKey = `chip-${example}`;
+                  const animationValue = chipAnimationValues.get(chipKey) || new Animated.Value(1);
+                  const isSelected = selectedChip === example;
+                  
+                  return (
+                    <Animated.View
+                      key={`row2-${index}`}
+                      style={{
+                        transform: [{ scale: animationValue }],
+                        marginLeft: 0,
+                        marginTop: index % 4 === 0 ? 2 : 0,
+                      }}
+                    >
+                      <TouchableOpacity
+                        style={[
+                          styles.examplePill,
+                          isSelected && styles.examplePillSelected,
+                          {
+                            backgroundColor: isSelected 
+                              ? theme.colors.accentVibrant 
+                              : theme.colors.backgroundSecondary,
+                            borderColor: isSelected 
+                              ? theme.colors.accent 
+                              : theme.colors.accentSoft,
+                          }
+                        ]}
+                        onPress={() => handleExampleClick(example)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[
+                          styles.examplePillText,
+                          isSelected && styles.examplePillTextSelected,
+                        ]}>
+                          {example}
+                        </Text>
+                      </TouchableOpacity>
+                    </Animated.View>
+                  );
+                })}
               </ScrollView>
             </View>
           )}
@@ -266,9 +722,22 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
           styles.inputSection,
           { paddingBottom: insets.bottom + (keyboard.isVisible ? 20 : 32) }
         ]}>
-          <View style={[
+          <Animated.View style={[
             styles.inputContainer,
-            isInputFocused && styles.inputContainerFocused
+            isInputFocused && styles.inputContainerFocused,
+            {
+              backgroundColor: inputStateValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [
+                  theme.colors.inputBackground,
+                  theme.colors.inputFocusBackground,  // Use dedicated focus background
+                ]
+              }),
+              borderColor: inputStateValue.interpolate({
+                inputRange: [0, 1],
+                outputRange: [theme.colors.inputBorder, theme.colors.accentVibrant]
+              }),
+            }
           ]}>
             <TextInput
               ref={inputRef}
@@ -276,7 +745,7 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
               value={goalController.state.currentGoal}
               onChangeText={goalController.handlers.updateCurrentGoal}
               placeholder="Enter a goal you want to achieve..."
-              placeholderTextColor={theme.colors.textTertiary}
+              placeholderTextColor={theme.colors.inputPlaceholder}
               multiline
               textAlignVertical="top"
               onFocus={handleInputFocus}
@@ -286,22 +755,33 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
               blurOnSubmit={false}
             />
             
-            {/* Send Button */}
-            <TouchableOpacity
+            {/* Send Button with enhanced state feedback */}
+            <Animated.View
               style={[
                 styles.actionButton,
-                goalController.state.isValid ? styles.sendButton : styles.sendButtonDisabled
+                goalController.state.isValid ? styles.sendButton : styles.sendButtonDisabled,
+                {
+                  transform: [{
+                    scale: goalController.state.isValid ? 1 : 0.9
+                  }],
+                  opacity: goalController.state.isValid ? 1 : 0.6,
+                }
               ]}
-              onPress={handleSubmit}
-              disabled={!goalController.state.isValid || goalController.state.isSubmitting}
             >
-              <MaterialIcons 
-                name="send" 
-                size={18} 
-                color="#FFFFFF" 
-              />
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={[styles.actionButton, { backgroundColor: 'transparent' }]}
+                onPress={handleSubmit}
+                disabled={!goalController.state.isValid || goalController.state.isSubmitting}
+                activeOpacity={0.7}
+              >
+                <MaterialIcons 
+                  name="send" 
+                  size={18} 
+                  color={theme.name === 'dark' ? '#0F172A' : '#FFFFFF'} // White icon for vibrant button
+                />
+              </TouchableOpacity>
+            </Animated.View>
+          </Animated.View>
 
           {/* Goal Count Progress */}
           {goalController.state.goals.length > 0 && (
@@ -311,6 +791,7 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
           )}
         </View>
       </KeyboardAvoidingView>
+      )}
     </SafeAreaView>
   );
 };

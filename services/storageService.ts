@@ -2,6 +2,16 @@
 // Uses AsyncStorage with proper error handling
 
 import { AsyncStorageUtils } from '@/utils/asyncStorage';
+import { GoalAnalysisResponse } from './geminiService';
+
+export interface GoalHistoryItem {
+  id: string;
+  goalText: string;
+  goalSummary: string;
+  analysis: GoalAnalysisResponse;
+  createdAt: string;
+  timestamp: number;
+}
 
 export class StorageService {
   private static instance: StorageService;
@@ -82,9 +92,59 @@ export class StorageService {
     try {
       await AsyncStorageUtils.removeItem('@nudge_onboarding_complete');
       await AsyncStorageUtils.removeItem('@nudge_user_goals');
+      await AsyncStorageUtils.removeItem('@nudge_goal_history');
       return true;
     } catch (error) {
       console.error('Failed to clear user data:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Save goal analysis to history
+   */
+  async saveGoalAnalysis(goalText: string, goalSummary: string, analysis: GoalAnalysisResponse): Promise<boolean> {
+    try {
+      const history = await this.loadGoalHistory();
+      const newItem: GoalHistoryItem = {
+        id: Date.now().toString(),
+        goalText,
+        goalSummary,
+        analysis,
+        createdAt: new Date().toISOString(),
+        timestamp: Date.now(),
+      };
+      
+      const updatedHistory = [newItem, ...history].slice(0, 20); // Keep last 20 analyses
+      return await AsyncStorageUtils.setObject('@nudge_goal_history', updatedHistory);
+    } catch (error) {
+      console.error('Failed to save goal analysis:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Load goal history
+   */
+  async loadGoalHistory(): Promise<GoalHistoryItem[]> {
+    try {
+      const history = await AsyncStorageUtils.getObject('@nudge_goal_history');
+      return Array.isArray(history) ? history : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Delete goal analysis from history
+   */
+  async deleteGoalAnalysis(id: string): Promise<boolean> {
+    try {
+      const history = await this.loadGoalHistory();
+      const updatedHistory = history.filter(item => item.id !== id);
+      return await AsyncStorageUtils.setObject('@nudge_goal_history', updatedHistory);
+    } catch (error) {
+      console.error('Failed to delete goal analysis:', error);
       return false;
     }
   }
