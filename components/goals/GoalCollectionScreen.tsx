@@ -6,18 +6,19 @@
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
+import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createGoalCollectionStyles } from '../../assets/styles/goals/goal-collection.styles';
@@ -27,6 +28,7 @@ import { useKeyboardAware } from '../../hooks/goals/useKeyboardAware';
 import { analyzeGoalWithGemini, createSmartGoalSummary, GoalAnalysisResponse } from '../../services/geminiService';
 import { storageService } from '../../services/storageService';
 import AnimatedBackground from '../ui/AnimatedBackground';
+import { SettingsScreen } from '../ui/SettingsScreen';
 import { TerminalLoader } from '../ui/TerminalLoader';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { GoalHistoryTab } from './GoalHistoryTab';
@@ -66,6 +68,7 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   const [terminalStage, setTerminalStage] = useState<'analyzing' | 'parsing' | 'success' | 'error'>('analyzing');
   const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
+  const [showSettings, setShowSettings] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const animatedValue = useRef(new Animated.Value(1)).current;
   
@@ -79,6 +82,18 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   
   // Input field state layer animation
   const inputStateValue = useRef(new Animated.Value(0)).current;
+
+  // Reset animations when settings modal closes
+  useEffect(() => {
+    if (!showSettings) {
+      // Reset all animation values to prevent UI misalignment
+      iconPulseValue.setValue(1);
+      iconScaleValue.setValue(1);
+      iconOpacityValue.setValue(0.8);
+      animatedValue.setValue(1);
+      inputStateValue.setValue(0);
+    }
+  }, [showSettings, iconPulseValue, iconScaleValue, iconOpacityValue, animatedValue, inputStateValue]);
 
   // Retry analysis function
   const retryAnalysis = async () => {
@@ -528,43 +543,51 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       {/* Animated Background */}
       <AnimatedBackground intensity="subtle" />
       
-      <ThemeToggle onToggle={toggleTheme} theme={theme} safeAreaTop={insets.top} />
-      
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'create' && styles.activeTab]}
-          onPress={() => handleTabChange('create')}
-        >
-          <MaterialIcons 
-            name="add-circle-outline" 
-            size={20} 
-            color={activeTab === 'create' ? theme.colors.accentVibrant : theme.colors.textSecondary} 
-          />
-          <Text style={[
-            styles.tabText,
-            activeTab === 'create' && styles.activeTabText
-          ]}>
-            Create Goal
-          </Text>
+      {/* Header with Settings, Centered Tabs, and Theme Toggle */}
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.settingsButton}>
+          <MaterialIcons name="settings" size={20} color={theme.colors.textSecondary} />
         </TouchableOpacity>
         
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'history' && styles.activeTab]}
-          onPress={() => handleTabChange('history')}
-        >
-          <MaterialIcons 
-            name="history" 
-            size={20} 
-            color={activeTab === 'history' ? theme.colors.accentVibrant : theme.colors.textSecondary} 
-          />
-          <Text style={[
-            styles.tabText,
-            activeTab === 'history' && styles.activeTabText
-          ]}>
-            History
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <View style={styles.compactTabContainer}>
+            <TouchableOpacity
+              style={[styles.compactTab, activeTab === 'create' && styles.activeCompactTab]}
+              onPress={() => handleTabChange('create')}
+            >
+              <MaterialIcons 
+                name="add-circle-outline" 
+                size={16} 
+                color={activeTab === 'create' ? (theme.name === 'dark' ? '#0F172A' : '#FFFFFF') : theme.colors.textSecondary} 
+              />
+              <Text style={[
+                styles.compactTabText,
+                activeTab === 'create' && styles.activeCompactTabText
+              ]}>
+                Create
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.compactTab, activeTab === 'history' && styles.activeCompactTab]}
+              onPress={() => handleTabChange('history')}
+            >
+              <MaterialIcons 
+                name="history" 
+                size={16} 
+                color={activeTab === 'history' ? (theme.name === 'dark' ? '#0F172A' : '#FFFFFF') : theme.colors.textSecondary} 
+              />
+              <Text style={[
+                styles.compactTabText,
+                activeTab === 'history' && styles.activeCompactTabText
+              ]}>
+                History
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+        
+        <ThemeToggle onToggle={toggleTheme} theme={theme} safeAreaTop={0} inline={true} />
       </View>
       
       {/* Tab Content */}
@@ -577,7 +600,8 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
+        enabled={keyboard.isVisible}
       >
         {/* Header Section with Smooth Animation */}
         <Animated.View 
@@ -586,32 +610,38 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
             { transform: [{ scale: animatedValue }] }
           ]}
         >
-          {/* Clean Icon with Breathing Pulse and Lock-in Animation */}
-          <Animated.View 
-            style={[
-              styles.iconContainer,
-              {
-                transform: [
-                  { scale: Animated.multiply(iconPulseValue, iconScaleValue) }
-                ],
-                opacity: iconOpacityValue,
-              }
-            ]}
-          >
-            <MaterialIcons 
-              name="gps-fixed" 
-              size={36} 
-              color={theme.name === 'dark' ? '#0F172A' : '#FFFFFF'} // White icon for vibrant background
-            />
-          </Animated.View>
+          {/* Only show icon, heading and examples when no content is entered or keyboard is visible */}
+          {(!goalController.state.currentGoal.trim() || keyboard.isVisible) && (
+            <>
+              {/* Clean Icon with Breathing Pulse and Lock-in Animation */}
+              <Animated.View 
+                style={[
+                  styles.iconContainer,
+                  {
+                    transform: [
+                      { scale: Animated.multiply(iconPulseValue, iconScaleValue) }
+                    ],
+                    opacity: iconOpacityValue,
+                  }
+                ]}
+              >
+                <LottieView
+                  source={require('../../assets/animations/1.json')}
+                  style={{ width: 300, height: 300 }}
+                  autoPlay
+                  loop
+                />
+              </Animated.View>
+              
+              {/* Main Heading */}
+              <Text style={styles.mainHeading}>
+                What are your goals in life?
+              </Text>
+            </>
+          )}
           
-          {/* Main Heading */}
-          <Text style={styles.mainHeading}>
-            What are your goals in life?
-          </Text>
-          
-          {/* Example Pills - 2 Rows with Auto-scroll */}
-          {!keyboard.isVisible && (
+          {/* Example Pills - 2 Rows with Auto-scroll - Only show when no content and keyboard not visible */}
+          {!keyboard.isVisible && !goalController.state.currentGoal.trim() && (
             <View style={styles.examplePillsContainer}>
               {/* Row 1 - Left to Right Scroll */}
               <ScrollView 
@@ -791,6 +821,14 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
           )}
         </View>
       </KeyboardAvoidingView>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <SettingsScreen 
+          theme={theme} 
+          onClose={() => setShowSettings(false)} 
+        />
       )}
     </SafeAreaView>
   );

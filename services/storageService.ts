@@ -13,6 +13,16 @@ export interface GoalHistoryItem {
   timestamp: number;
 }
 
+export interface UserProfile {
+  name: string;
+  geminiApiKey?: string;
+  notificationsEnabled?: boolean;
+  autoSaveHistory?: boolean;
+  maxHistoryItems?: number;
+  onboardingComplete?: boolean;
+  createdAt?: string;
+}
+
 export class StorageService {
   private static instance: StorageService;
   
@@ -148,7 +158,35 @@ export class StorageService {
       return false;
     }
   }
+
+  /**
+   * Save user profile data
+   */
+  async saveUserProfile(profile: UserProfile): Promise<boolean> {
+    try {
+      return await AsyncStorageUtils.setObject('@nudge_user_profile', profile);
+    } catch (error) {
+      console.error('Failed to save user profile:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Load user profile data
+   */
+  async loadUserProfile(): Promise<UserProfile | null> {
+    try {
+      return await AsyncStorageUtils.getObject<UserProfile>('@nudge_user_profile');
+    } catch (error) {
+      console.error('Failed to load user profile:', error);
+      return null;
+    }
+  }
 }
 
 // Export singleton instance
 export const storageService = StorageService.getInstance();
+
+// Convenience functions for easy import
+export const saveUserData = (profile: UserProfile) => storageService.saveUserProfile(profile);
+export const loadUserData = () => storageService.loadUserProfile();

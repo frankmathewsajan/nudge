@@ -16,6 +16,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Theme } from '../../contexts/ThemeContext';
 import { GoalAnalysisResponse } from '../../services/geminiService';
 import { GoalHistoryItem, storageService } from '../../services/storageService';
@@ -32,6 +33,7 @@ export const GoalHistoryTab: React.FC<GoalHistoryTabProps> = ({
   const [history, setHistory] = useState<GoalHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const styles = createHistoryStyles(theme);
 
@@ -88,31 +90,34 @@ export const GoalHistoryTab: React.FC<GoalHistoryTabProps> = ({
           activeOpacity={0.7}
         >
           <View style={styles.itemHeader}>
-            <MaterialIcons name="flag" size={20} color={theme.colors.accentVibrant} />
-            <Text style={styles.itemTitle} numberOfLines={2}>
-              {item.goalSummary}
-            </Text>
+            <View style={styles.iconContainer}>
+              <MaterialIcons name="flag" size={18} color={theme.colors.accentVibrant} />
+            </View>
+            <View style={styles.titleContainer}>
+              <Text style={styles.itemTitle} numberOfLines={2}>
+                {item.goalSummary}
+              </Text>
+              <Text style={styles.itemDate}>{timeAgo}</Text>
+            </View>
           </View>
-          
-          <Text style={styles.itemDate}>{timeAgo}</Text>
           
           <View style={styles.itemStats}>
             <View style={styles.stat}>
-              <MaterialIcons name="psychology" size={14} color={theme.colors.textSecondary} />
+              <MaterialIcons name="psychology" size={12} color={theme.colors.textSecondary} />
               <Text style={styles.statText}>
                 {item.analysis.primary_goal.difficulty}
               </Text>
             </View>
             
             <View style={styles.stat}>
-              <MaterialIcons name="schedule" size={14} color={theme.colors.textSecondary} />
+              <MaterialIcons name="schedule" size={12} color={theme.colors.textSecondary} />
               <Text style={styles.statText}>
                 {item.analysis.primary_goal.estimated_timeline}
               </Text>
             </View>
             
             <View style={styles.stat}>
-              <MaterialIcons name="checklist" size={14} color={theme.colors.textSecondary} />
+              <MaterialIcons name="checklist" size={12} color={theme.colors.textSecondary} />
               <Text style={styles.statText}>
                 {item.analysis.primary_goal.smart_breakdown.length} steps
               </Text>
@@ -123,9 +128,9 @@ export const GoalHistoryTab: React.FC<GoalHistoryTabProps> = ({
         <TouchableOpacity
           style={styles.deleteButton}
           onPress={() => handleDeleteGoal(item)}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <MaterialIcons name="delete-outline" size={20} color={theme.colors.textTertiary} />
+          <MaterialIcons name="delete-outline" size={18} color={theme.colors.textTertiary} />
         </TouchableOpacity>
       </View>
     );
@@ -168,13 +173,6 @@ export const GoalHistoryTab: React.FC<GoalHistoryTabProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Goal History</Text>
-        <Text style={styles.headerSubtitle}>
-          {history.length} {history.length === 1 ? 'analysis' : 'analyses'}
-        </Text>
-      </View>
-      
       <FlatList
         data={history}
         renderItem={renderHistoryItem}
@@ -201,35 +199,50 @@ const createHistoryStyles = (theme: Theme) => StyleSheet.create({
   },
   
   header: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.inputBorder,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: theme.colors.backgroundSecondary,
+    shadowColor: theme.colors.textSecondary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   
   headerTitle: {
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.colors.textPrimary,
     marginBottom: 4,
+    letterSpacing: 0.3,
   },
   
   headerSubtitle: {
     fontSize: 14,
+    fontWeight: '500',
     color: theme.colors.textSecondary,
+    letterSpacing: 0.1,
   },
   
   listContent: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 16,
   },
   
   historyItem: {
     backgroundColor: theme.colors.backgroundSecondary,
     borderRadius: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: theme.colors.inputBorder,
+    marginBottom: 12,
     flexDirection: 'row',
     alignItems: 'center',
+    shadowColor: theme.colors.textSecondary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
+    overflow: 'hidden',
+    minHeight: 72,
   },
   
   itemContent: {
@@ -239,67 +252,98 @@ const createHistoryStyles = (theme: Theme) => StyleSheet.create({
   
   itemHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
+  },
+  
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.background,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  
+  titleContainer: {
+    flex: 1,
   },
   
   itemTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: theme.colors.textPrimary,
-    marginLeft: 8,
-    flex: 1,
+    lineHeight: 20,
+    letterSpacing: 0.2,
+    marginBottom: 2,
   },
   
   itemDate: {
     fontSize: 12,
+    fontWeight: '500',
     color: theme.colors.textTertiary,
-    marginBottom: 12,
+    letterSpacing: 0.1,
   },
   
   itemStats: {
     flexDirection: 'row',
-    gap: 16,
+    gap: 12,
+    flexWrap: 'wrap',
   },
   
   stat: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
   
   statText: {
-    fontSize: 12,
+    fontSize: 11,
+    fontWeight: '500',
     color: theme.colors.textSecondary,
     textTransform: 'capitalize',
+    letterSpacing: 0.1,
   },
   
   deleteButton: {
-    padding: 16,
+    width: 48,
+    height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: theme.colors.background,
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
   },
   
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: 40,
   },
   
   emptyText: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: '600',
     color: theme.colors.textSecondary,
-    marginTop: 16,
+    marginTop: 20,
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
   
   emptySubText: {
-    fontSize: 14,
+    fontSize: 16,
+    fontWeight: '400',
     color: theme.colors.textTertiary,
-    marginTop: 8,
+    marginTop: 12,
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 24,
+    paddingHorizontal: 20,
+    letterSpacing: 0.2,
   },
 });

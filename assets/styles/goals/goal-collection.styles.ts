@@ -21,25 +21,19 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
-    paddingTop: 60,
+    paddingTop: 40, // Reduced from 60
+    maxHeight: '80%', // Prevent overflow
   },
 
   // Clean icon/logo area - Enhanced with vibrant gradient-like effects
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: theme.colors.accentVibrant,     // Use vibrant cyan/blue
+    width: 320, // Reduced from 500 to fit better
+    height: 320, // Reduced from 500 to fit better
+    borderRadius: 160,
+    backgroundColor: 'transparent',     // Remove background for Lottie
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
-    shadowColor: theme.colors.accentVibrant,
-    shadowOffset: { width: 0, height: 12 },         // Stronger shadow
-    shadowOpacity: 0.25,                            // More prominent
-    shadowRadius: 32,                               // Larger glow
-    elevation: 12,
-    borderWidth: 2,
-    borderColor: theme.colors.accent,               // Gold border for contrast
+    marginBottom: 8, // Further reduced from 16
   },
 
   iconSymbol: {
@@ -50,13 +44,13 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
 
   // Main heading - Enhanced book-style typography with premium fonts
   mainHeading: {
-    fontSize: 38,
-    fontWeight: '200',
+    fontSize: 24, // Reduced from 28
+    fontWeight: '300',
     color: theme.colors.textPrimary,
     textAlign: 'center',
-    letterSpacing: -1.2,
-    lineHeight: 44,
-    marginBottom: 32,
+    letterSpacing: -0.6, // Reduced from -0.8
+    lineHeight: 30, // Reduced from 36
+    marginBottom: 24, // Reduced from 32
     fontFamily: Platform.OS === 'ios' 
       ? 'Menlo' 
       : Platform.OS === 'android' 
@@ -185,35 +179,35 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
 
   // Example pills section - 2-row layout with tighter spacing
   examplePillsContainer: {
-    marginTop: 40,
-    height: 120, // Reduced height for tighter spacing
+    marginTop: 24,
+    height: 80, // Much reduced height for tighter spacing
   },
 
   exampleRow: {
-    height: 55, // Slightly shorter rows
-    marginBottom: 4, // Much less space between rows
+    height: 38, // Much shorter rows
+    marginBottom: 2, // Minimal space between rows
   },
 
   exampleRowContent: {
     alignItems: 'center',
-    paddingRight: 50, // Reduced padding for seamless scrolling
-    paddingLeft: 10, // Reduced left padding
+    paddingRight: 40, // Reduced padding for seamless scrolling
+    paddingLeft: 8, // Reduced left padding
   },
 
   examplePill: {
     backgroundColor: theme.colors.backgroundSecondary,
-    borderRadius: 25, // More rounded
-    paddingHorizontal: 20, // More horizontal padding
-    paddingVertical: 12, // More vertical padding
-    marginRight: 16, // More space between pills
-    borderWidth: 1.5,
+    borderRadius: 20, // More rounded
+    paddingHorizontal: 14, // Reduced horizontal padding
+    paddingVertical: 8, // Reduced vertical padding
+    marginRight: 12, // Less space between pills
+    borderWidth: 1,
     borderColor: theme.colors.accentSoft,          // Purple border for elegance
     shadowColor: theme.colors.accentSoft,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.12,
-    shadowRadius: 6,
-    elevation: 3,
-    minWidth: 80, // Minimum width to prevent squashing
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+    minWidth: 60, // Reduced minimum width
   },
 
   examplePillSelected: {
@@ -228,7 +222,7 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
   },
 
   examplePillText: {
-    fontSize: 14, // Slightly larger text
+    fontSize: 11, // Even smaller text for pills
     color: theme.colors.textSecondary,
     fontWeight: '500',
     textAlign: 'center',
@@ -275,6 +269,80 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
 
   activeTabText: {
     color: theme.colors.accentVibrant,
+    fontWeight: '600',
+  },
+
+  // Compact header navigation styles
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+
+  settingsButton: {
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: theme.colors.backgroundSecondary,
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: theme.colors.textSecondary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  compactTabContainer: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.backgroundSecondary,
+    borderRadius: 12,
+    padding: 4,
+    shadowColor: theme.colors.textSecondary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+
+  compactTab: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    gap: 6,
+    minWidth: 80,
+  },
+
+  activeCompactTab: {
+    backgroundColor: theme.colors.accentVibrant,
+    shadowColor: theme.colors.accentVibrant,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+
+  compactTabText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: theme.colors.textSecondary,
+  },
+
+  activeCompactTabText: {
+    color: theme.name === 'dark' ? '#0F172A' : '#FFFFFF',
     fontWeight: '600',
   },
 });
