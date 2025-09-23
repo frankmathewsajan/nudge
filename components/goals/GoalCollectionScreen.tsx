@@ -9,16 +9,16 @@ import { MaterialIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Animated,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createGoalCollectionStyles } from '../../assets/styles/goals/goal-collection.styles';
@@ -149,6 +149,13 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       setCurrentGoalText(goal.text);
       setRetryCount(0);
       
+      // Start analyzing UI immediately - no delay
+      setIsAnalyzing(true);
+      setAnalysisError(null);
+      setCanRetry(false);
+      setShowTerminalLoader(true);
+      setTerminalStage('analyzing');
+      
       // Create smart summary for the goal first
       let goalSummary = goal.text;
       try {
@@ -160,13 +167,6 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       }
       
       setCurrentPlanningGoal(goalSummary);
-      
-      // Start analyzing the goal with Gemini AI
-      setIsAnalyzing(true);
-      setAnalysisError(null);
-      setCanRetry(false);
-      setShowTerminalLoader(true);
-      setTerminalStage('analyzing');
       
       try {
         console.log('Starting goal analysis with Gemini...');

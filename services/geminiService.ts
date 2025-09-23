@@ -9,6 +9,49 @@
 // API Configuration
 const GEMINI_API_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 
+// Test network connectivity
+const testNetworkConnectivity = async (): Promise<boolean> => {
+  try {
+    console.log('Testing network connectivity...');
+    
+    // Try multiple endpoints to ensure it's not a single endpoint issue
+    const testEndpoints = [
+      'https://www.google.com',
+      'https://httpbin.org/get', 
+      'https://jsonplaceholder.typicode.com/posts/1'
+    ];
+    
+    for (const endpoint of testEndpoints) {
+      try {
+        console.log(`Testing connectivity to ${endpoint}...`);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+        
+        const response = await fetch(endpoint, { 
+          method: 'HEAD',
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          console.log(`Network test successful with ${endpoint}`);
+          return true;
+        }
+      } catch (error) {
+        console.log(`Failed to connect to ${endpoint}:`, error instanceof Error ? error.message : 'Unknown error');
+        continue; // Try next endpoint
+      }
+    }
+    
+    console.log('All network connectivity tests failed');
+    return false;
+  } catch (error) {
+    console.error('Network connectivity test failed:', error);
+    return false;
+  }
+};
+
 // Get API key from environment variables
 const getApiKey = () => {
   // Try both possible environment variable names
@@ -500,6 +543,52 @@ export const summarizeGoal = (goalText: string): string => {
 export const analyzeGoalWithGemini = async (userGoal: string): Promise<GoalAnalysisResponse> => {
   try {
     const apiKey = getApiKey();
+    
+    // Development mode - try Gemini API directly first, then fall back to network test
+    const isDevelopment = process.env.NODE_ENV === 'development' || process.env.EXPO_PUBLIC_ENV === 'development';
+    const skipNetworkTest = process.env.EXPO_PUBLIC_SKIP_NETWORK_TEST === 'true';
+    
+    if (isDevelopment || skipNetworkTest) {
+      console.log(skipNetworkTest ? 'Skipping network test (forced)' : 'Development mode: Attempting Gemini API directly...');
+      try {
+        return await attemptGeminiAPICall(userGoal, apiKey);
+      } catch (directCallError) {
+        console.log('Direct Gemini API call failed, testing network connectivity...');
+        const hasConnectivity = await testNetworkConnectivity();
+        if (!hasConnectivity) {
+          console.log('Network connectivity test also failed, using fallback');
+          const fallbackResponse = createFallbackResponse(userGoal);
+          console.log('Returning fallback response due to network connectivity issue');
+          return fallbackResponse;
+        }
+        // If network test passes but Gemini fails, re-throw the original error
+        throw directCallError;
+      }
+    } else {
+      // Production mode - test network first
+      const hasConnectivity = await testNetworkConnectivity();
+      if (!hasConnectivity) {
+        console.log('Network connectivity test failed, using fallback');
+        const fallbackResponse = createFallbackResponse(userGoal);
+        console.log('Returning fallback response due to network connectivity issue');
+        return fallbackResponse;
+      }
+      
+      return await attemptGeminiAPICall(userGoal, apiKey);
+    }
+    
+  } catch (error) {
+    console.error('Error in analyzeGoalWithGemini:', error);
+    
+    // Return a fallback response to prevent app crashes
+    const fallbackResponse = createFallbackResponse(userGoal);
+    console.log('Returning fallback response due to API error');
+    return fallbackResponse;
+  }
+};
+
+// Extract Gemini API call logic into separate function
+const attemptGeminiAPICall = async (userGoal: string, apiKey: string): Promise<GoalAnalysisResponse> => {
     const instructionsTemplate = await loadInstructionsTemplateV2();
     
     // Replace {user_input} placeholder with actual user input
@@ -543,18 +632,41 @@ export const analyzeGoalWithGemini = async (userGoal: string): Promise<GoalAnaly
     };
 
     console.log('Sending request to Gemini API...');
+    console.log('API URL:', `${GEMINI_API_BASE_URL}/models/gemini-1.5-flash:generateContent`);
+    console.log('API Key present:', !!apiKey);
+    console.log('API Key prefix:', apiKey.substring(0, 10) + '...');
     
-    const response = await fetch(
-      `${GEMINI_API_BASE_URL}/models/gemini-2.0-flash:generateContent`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-goog-api-key': apiKey,
-        },
-        body: JSON.stringify(requestBody),
+    let response;
+    try {
+      response = await fetch(
+        `${GEMINI_API_BASE_URL}/models/gemini-1.5-flash:generateContent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-goog-api-key': apiKey,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+    } catch (networkError) {
+      console.error('Network request failed:', networkError);
+      const error = networkError as Error;
+      console.error('Network error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack?.substring(0, 200) + '...' // Truncate stack trace
+      });
+      
+      // Check if it's a specific type of network error
+      if (error.message.includes('Network request failed')) {
+        console.error('This appears to be a React Native network connectivity issue');
+        console.error('Possible causes: Simulator network settings, firewall, proxy, or DNS issues');
       }
-    );
+      
+      // For network errors, we should definitely fall back
+      throw new Error(`Network connection failed: ${error.message || 'Unknown network error'}`);
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -686,15 +798,6 @@ export const analyzeGoalWithGemini = async (userGoal: string): Promise<GoalAnaly
       
       throw new Error('Failed to parse AI response. The response may not be valid JSON.');
     }
-
-  } catch (error) {
-    console.error('Error in analyzeGoalWithGemini:', error);
-    
-    // Return a fallback response to prevent app crashes
-    const fallbackResponse = createFallbackResponse(userGoal);
-    console.log('Returning fallback response due to API error');
-    return fallbackResponse;
-  }
 };
 
 /**
@@ -950,7 +1053,7 @@ Examples:
     };
 
     const response = await fetch(
-      `${GEMINI_API_BASE_URL}/models/gemini-2.0-flash:generateContent`,
+      `${GEMINI_API_BASE_URL}/models/gemini-1.5-flash:generateContent`,
       {
         method: 'POST',
         headers: {
