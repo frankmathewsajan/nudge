@@ -177,9 +177,19 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
         }, 3000);
         
         const analysis = await analyzeGoalWithGemini(goal.text);
-        setTerminalStage('success');
+        
+        // Check if this is a fallback response (which means there was an error)
+        const isFallbackResponse = analysis.primary_goal.analysis.includes("This is a great goal that can significantly improve your skills and capabilities. Breaking it down into manageable steps with proper time management");
+        
+        if (isFallbackResponse) {
+          console.log('Using V2 fallback response due to API error');
+          setTerminalStage('success'); // Still show success to user for better UX
+        } else {
+          console.log('Goal analysis completed successfully with V2 format');
+          setTerminalStage('success');
+        }
+        
         setGoalAnalysis(analysis);
-        console.log('Goal analysis completed successfully');
         
         // Save to history
         try {
@@ -600,23 +610,28 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
-        enabled={keyboard.isVisible}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
-        {/* Header Section with Smooth Animation */}
-        <Animated.View 
-          style={[
-            keyboard.isVisible ? styles.headerSectionKeyboard : styles.headerSection,
-            { transform: [{ scale: animatedValue }] }
-          ]}
+        <ScrollView 
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {/* Only show icon, heading and examples when no content is entered or keyboard is visible */}
-          {(!goalController.state.currentGoal.trim() || keyboard.isVisible) && (
+          {/* Header Section with Smooth Animation */}
+          <Animated.View 
+            style={[
+              keyboard.isVisible ? styles.headerSectionKeyboard : styles.headerSection,
+              { transform: [{ scale: animatedValue }] }
+            ]}
+          >
+          {/* Only show icon and heading when no content is entered */}
+          {!goalController.state.currentGoal.trim() && (
             <>
               {/* Clean Icon with Breathing Pulse and Lock-in Animation */}
               <Animated.View 
                 style={[
-                  styles.iconContainer,
+                  keyboard.isVisible ? styles.iconContainerKeyboard : styles.iconContainer,
                   {
                     transform: [
                       { scale: Animated.multiply(iconPulseValue, iconScaleValue) }
@@ -627,16 +642,21 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
               >
                 <LottieView
                   source={require('../../assets/animations/1.json')}
-                  style={{ width: 300, height: 300 }}
+                  style={{ 
+                    width: keyboard.isVisible ? 250 : 300, 
+                    height: keyboard.isVisible ? 250 : 300 
+                  }}
                   autoPlay
                   loop
                 />
               </Animated.View>
               
-              {/* Main Heading */}
-              <Text style={styles.mainHeading}>
-                What are your goals in life?
-              </Text>
+              {/* Main Heading - Hide when keyboard is visible */}
+              {!keyboard.isVisible && (
+                <Text style={styles.mainHeading}>
+                  What are your goals in life?
+                </Text>
+              )}
             </>
           )}
           
@@ -816,10 +836,11 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
           {/* Goal Count Progress */}
           {goalController.state.goals.length > 0 && (
             <Text style={styles.helpText}>
-              {goalController.state.goals.length} of 3 goals added
+              {goalController.state.goals.length} goal{goalController.state.goals.length > 1 ? 's' : ''} added
             </Text>
           )}
         </View>
+        </ScrollView>
       </KeyboardAvoidingView>
       )}
 

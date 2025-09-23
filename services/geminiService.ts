@@ -29,20 +29,20 @@ const getSeason = (month: number): string => {
   return 'Winter';
 };
 
-// Load V2 instructions template with extended JSON and minute-level time context
+// Load V2 instructions template with enhanced time context and current date/time
 const loadInstructionsTemplateV2 = async () => {
   try {
     const currentDateTime = new Date();
     const timeContext = {
-      currentDate: currentDateTime.toLocaleDateString(),
-      currentTime: currentDateTime.toLocaleTimeString(),
-      currentMinute: currentDateTime.getMinutes(),
-      currentHour: currentDateTime.getHours(),
-      dayOfWeek: currentDateTime.toLocaleDateString('en-US', { weekday: 'long' }),
+      current_date: currentDateTime.toLocaleDateString(),
+      current_time: currentDateTime.toLocaleTimeString(),
+      current_minute: currentDateTime.getMinutes(),
+      current_hour: currentDateTime.getHours(),
+      day_of_week: currentDateTime.toLocaleDateString('en-US', { weekday: 'long' }),
       month: currentDateTime.toLocaleDateString('en-US', { month: 'long' }),
       year: currentDateTime.getFullYear(),
       season: getSeason(currentDateTime.getMonth()),
-      timeOfDay: currentDateTime.getHours() < 12 ? 'Morning' : currentDateTime.getHours() < 17 ? 'Afternoon' : 'Evening',
+      time_of_day: currentDateTime.getHours() < 12 ? 'Morning' : currentDateTime.getHours() < 17 ? 'Afternoon' : 'Evening',
     };
     
     return `# Goal Analysis AI - V2 Enhanced Instructions with Time Block Management
@@ -51,9 +51,9 @@ You are an intelligent productivity assistant for the "Nudge" goal-tracking app 
 A user provides a freeform description of their goals, and you analyze it to create actionable, structured plans with precise time blocks and scheduling.
 
 ## CURRENT CONTEXT:
-- **Date**: ${timeContext.currentDate} (${timeContext.dayOfWeek})
-- **Time**: ${timeContext.currentTime} (${timeContext.timeOfDay})
-- **Precise Time**: Hour ${timeContext.currentHour}, Minute ${timeContext.currentMinute}
+- **Date**: ${timeContext.current_date} (${timeContext.day_of_week})
+- **Time**: ${timeContext.current_time} (${timeContext.time_of_day})
+- **Precise Time**: Hour ${timeContext.current_hour}, Minute ${timeContext.current_minute}
 - **Season**: ${timeContext.season} ${timeContext.year}
 - **Context**: Use this precise timing information to provide minute-accurate scheduling and time block recommendations
 
@@ -67,6 +67,24 @@ A user provides a freeform description of their goals, and you analyze it to cre
 6. **Provide sleep schedule optimization** based on goals and current time
 7. **Factor in circadian rhythms** for peak performance timing
 
+## Input Processing:
+Parse the user's input into these categories:
+- **skills**: Learning objectives, skill development
+- **career**: Professional goals, job-related tasks  
+- **projects**: Specific projects, deliverables, deadlines
+- **health**: Physical, mental, emotional wellbeing
+- **personal**: Personal development, hobbies, relationships
+- **pain_points**: Challenges, frustrations, blockers
+
+## For each item, extract:
+- **name**: Clear, actionable description
+- **status**: current/declining/stalled/planned/urgent
+- **priority**: urgent/high/medium/low
+- **deadline**: if mentioned or inferred
+- **time_estimate**: realistic time needed (daily/weekly)
+- **difficulty**: beginner/intermediate/advanced
+- **dependencies**: what needs to happen first
+
 ## Time Block Specifications:
 - **Pomodoro Blocks**: 25-minute focused work + 5-minute breaks
 - **Deep Work Blocks**: 90-minute sessions with 15-minute breaks
@@ -79,6 +97,25 @@ A user provides a freeform description of their goals, and you analyze it to cre
 - Factor in sleep cycles (90-minute intervals)
 - Consider goal deadlines for sleep schedule adjustments
 - Integrate morning routine timing with first productive block
+
+## Enhanced Analysis:
+For the primary goal, provide:
+- **smart_breakdown**: 3-5 specific, measurable steps with time estimates
+- **time_recommendation**: optimal daily/weekly time commitment
+- **session_structure**: how to structure practice/work sessions
+- **progress_milestones**: checkpoints to track success with timeframes
+- **motivation_tips**: personalized encouragement
+- **common_obstacles**: likely challenges and solutions
+- **resources_needed**: tools, materials, environment setup
+- **time_blocks**: detailed scheduling with daily/weekly structure
+- **sleep_optimization**: bedtime, wake time, and routine recommendations
+
+## Session Recommendations:
+Suggest realistic time slots based on goal complexity with optimal timing:
+- **pomodoro_sprints**: 25-minute focused work with breaks and optimal times
+- **deep_work**: 90-minute sessions for complex tasks with timing
+- **quick_wins**: 15-30 minutes for simple tasks with energy considerations
+- **learning_blocks**: 45-60 minutes for skill development with best hours
 
 ## Enhanced Analysis Output Format:
 Return ONLY valid JSON with this expanded structure:
@@ -231,6 +268,17 @@ Return ONLY valid JSON with this expanded structure:
 - Design schedules that respect circadian rhythms
 - Return ONLY the JSON response, no explanations
 - Ensure all time blocks are realistic and achievable
+- Use current date/time context for personalized scheduling
+
+## Instructions:
+- Focus on the PRIMARY GOAL mentioned first or most emphasized
+- Be specific and actionable in all recommendations
+- Consider user's experience level and time constraints
+- Provide realistic, achievable timelines with precise timing
+- Include motivational elements to encourage consistency
+- Factor in current time of day for optimal scheduling
+- Ignore off-topic information or filler content
+- Return ONLY the JSON response, no explanations
 
 Now analyze the following user input:
 """
@@ -242,7 +290,7 @@ Now analyze the following user input:
   }
 };
 
-// Goal Analysis Response Interface V2 - Extended with time management
+// Goal Analysis Response Interface V2 - Enhanced with time management and scheduling
 export interface GoalAnalysisResponse {
   primary_goal: {
     name: string;
@@ -355,6 +403,14 @@ export interface GoalAnalysisResponse {
       activity: string;
     }>;
   };
+  // Additional V2 top-level fields
+  time_blocks?: Array<{
+    period: string;
+    activity: string;
+    duration: string;
+  }>;
+  sleep_optimization?: string;
+  schedule_suggestions?: string[];
 }
 
 /**
@@ -552,18 +608,82 @@ export const analyzeGoalWithGemini = async (userGoal: string): Promise<GoalAnaly
     // Parse the JSON response
     try {
       // Clean the response - remove markdown code blocks if present
-      const cleanedText = generatedText
+      let cleanedText = generatedText
         .replace(/```json\n?/g, '')
         .replace(/```\n?/g, '')
+        .replace(/^```/g, '')
+        .replace(/```$/g, '')
         .trim();
       
-      const parsedResponse: GoalAnalysisResponse = JSON.parse(cleanedText);
-      console.log('Successfully parsed Gemini response');
+      // Try to find JSON object in the response if it's mixed with other text
+      const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        cleanedText = jsonMatch[0];
+      }
       
+      console.log('Attempting to parse cleaned text:', cleanedText.substring(0, 300) + '...');
+      
+      let parsedResponse: GoalAnalysisResponse;
+      
+      try {
+        parsedResponse = JSON.parse(cleanedText);
+      } catch (firstParseError) {
+        console.log('First parse attempt failed, trying to fix common JSON issues...');
+        
+        // Try to fix common JSON issues
+        let fixedText = cleanedText
+          // Fix trailing commas
+          .replace(/,(\s*[}\]])/g, '$1')
+          // Fix single quotes to double quotes
+          .replace(/'/g, '"')
+          // Fix unquoted keys
+          .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":')
+          // Remove any trailing text after the last }
+          .replace(/\}[\s\S]*$/, '}');
+        
+        console.log('Attempting to parse fixed text:', fixedText.substring(0, 300) + '...');
+        parsedResponse = JSON.parse(fixedText);
+      }
+      
+      // Validate the response has required fields
+      if (!parsedResponse.primary_goal || !parsedResponse.primary_goal.name) {
+        console.error('Parsed response missing required fields:', parsedResponse);
+        throw new Error('AI response missing required goal information');
+      }
+      
+      // Validate structure against V2 format
+      const goal = parsedResponse.primary_goal as any;
+      const requiredFields = ['name', 'analysis', 'smart_breakdown', 'time_recommendation', 'session_structure', 'difficulty', 'estimated_timeline', 'progress_milestones', 'motivation_tips', 'common_obstacles', 'resources_needed'];
+      const missingFields = requiredFields.filter(field => !goal[field]);
+      
+      if (missingFields.length > 0) {
+        console.warn('Response missing some V2 required fields:', missingFields);
+        // Continue anyway - these might be optional or filled later
+      }
+      
+      // Check for V2 enhanced features (optional)
+      if (goal.time_blocks) {
+        console.log('V2 time blocks included in response');
+      }
+      if (goal.sleep_optimization) {
+        console.log('V2 sleep optimization included in response');
+      }
+      if (parsedResponse.energy_management) {
+        console.log('V2 energy management included in response');
+      }
+      
+      console.log('Successfully parsed Gemini response with V2 format');
       return parsedResponse;
+      
     } catch (parseError) {
       console.error('Failed to parse Gemini response as JSON:', parseError);
       console.error('Raw response:', generatedText);
+      console.error('Response length:', generatedText.length);
+      
+      // Log a sample of the response to help debug
+      console.log('Response sample (first 500 chars):', generatedText.substring(0, 500));
+      console.log('Response sample (last 500 chars):', generatedText.substring(Math.max(0, generatedText.length - 500)));
+      
       throw new Error('Failed to parse AI response. The response may not be valid JSON.');
     }
 
@@ -571,47 +691,142 @@ export const analyzeGoalWithGemini = async (userGoal: string): Promise<GoalAnaly
     console.error('Error in analyzeGoalWithGemini:', error);
     
     // Return a fallback response to prevent app crashes
-    return createFallbackResponse(userGoal);
+    const fallbackResponse = createFallbackResponse(userGoal);
+    console.log('Returning fallback response due to API error');
+    return fallbackResponse;
   }
 };
 
 /**
- * Create a fallback response when the API fails
+ * Create a fallback response when the API fails - V2 format with time management
  */
 const createFallbackResponse = (userGoal: string): GoalAnalysisResponse => {
+  const currentTime = new Date();
+  const currentHour = currentTime.getHours();
+  
+  // Generate time-aware recommendations
+  const morningStart = currentHour < 12 ? "07:00" : "07:00";
+  const focusTime = currentHour < 12 ? "09:00" : "14:00";
+  const eveningReview = "20:00";
+  
   return {
     primary_goal: {
       name: userGoal,
-      analysis: "This is a great goal that can significantly improve your skills and capabilities. Breaking it down into manageable steps will help you stay motivated and track progress.",
+      analysis: "This is a great goal that can significantly improve your skills and capabilities. Breaking it down into manageable steps with proper time management will help you stay motivated and track progress effectively.",
       smart_breakdown: [
-        "Research and gather resources",
-        "Create a structured learning plan", 
-        "Practice consistently with real projects",
-        "Track progress and celebrate milestones",
-        "Seek feedback and iterate on your approach"
+        "Research and gather resources (30 minutes)",
+        "Create a structured learning plan with time blocks (45 minutes)", 
+        "Practice consistently with real projects (60-90 minutes daily)",
+        "Track progress and celebrate milestones (15 minutes weekly)",
+        "Seek feedback and iterate on your approach (30 minutes bi-weekly)"
       ],
-      time_recommendation: "I recommend dedicating 60-90 minutes daily for focused work sessions. This duration allows for meaningful progress while maintaining sustainability.",
-      session_structure: "Start with 10 minutes of preparation, follow with 45-75 minutes of focused work, and end with 5 minutes of reflection and planning for next session.",
+      time_recommendation: "I recommend dedicating 60-90 minutes daily for focused work sessions, split into 25-minute Pomodoro blocks with 5-minute breaks. This duration allows for meaningful progress while maintaining sustainability.",
+      session_structure: "Start with 10 minutes of preparation and goal setting, follow with 2-3 Pomodoro cycles (25 min work + 5 min break), and end with 5 minutes of reflection and planning for next session.",
       difficulty: "intermediate",
-      estimated_timeline: "With consistent daily practice, you should see significant progress within 3-6 months.",
+      estimated_timeline: "With consistent daily practice using time-blocked sessions, you should see significant progress within 3-6 months.",
       progress_milestones: [
-        "Week 1: Complete initial research and setup",
+        "Week 1: Complete initial research and setup time-blocking system",
         "Week 4: Build first working version or demonstrate basic competency",
-        "Month 3: Achieve intermediate level proficiency",
-        "Month 6: Complete goal or reach advanced level"
+        "Month 3: Achieve intermediate level proficiency with optimized schedule",
+        "Month 6: Complete goal or reach advanced level with refined time management"
       ],
-      motivation_tips: "Remember that progress isn't always linear. Celebrate small wins along the way, and don't be afraid to adjust your approach based on what you learn.",
+      motivation_tips: "Remember that progress isn't always linear. Use time-blocking to create consistency, celebrate small wins along the way, and don't be afraid to adjust your schedule based on what you learn about your energy patterns.",
       common_obstacles: [
-        "Lack of time - Solution: Start with just 20-30 minutes daily and gradually increase",
-        "Feeling overwhelmed - Solution: Break tasks into smaller, manageable chunks",
-        "Loss of motivation - Solution: Track your progress visually and find an accountability partner"
+        "Lack of time - Solution: Start with just 25-minute Pomodoro sessions and gradually increase",
+        "Feeling overwhelmed - Solution: Break tasks into smaller, time-boxed chunks",
+        "Loss of motivation - Solution: Track your progress visually and schedule accountability check-ins"
       ],
       resources_needed: [
         "Dedicated learning time in your schedule",
         "Access to learning materials (books, courses, tutorials)",
         "Practice environment or tools",
-        "Progress tracking system"
-      ]
+        "Progress tracking system and timer for Pomodoro sessions"
+      ],
+      time_blocks: {
+        daily_schedule: [
+          {
+            time: morningStart,
+            duration_minutes: 30,
+            activity: "Morning routine & goal preparation",
+            type: "preparation",
+            energy_level: "medium"
+          },
+          {
+            time: focusTime,
+            duration_minutes: 90,
+            activity: "Primary goal deep work session",
+            type: "deep_work",
+            energy_level: "high",
+            pomodoro_count: 3
+          },
+          {
+            time: eveningReview,
+            duration_minutes: 15,
+            activity: "Progress review and tomorrow planning",
+            type: "review",
+            energy_level: "medium"
+          }
+        ],
+        weekly_schedule: [
+          {
+            day: "Monday",
+            total_minutes: 120,
+            sessions: 3,
+            focus_areas: ["primary goal", "skill building"]
+          },
+          {
+            day: "Tuesday",
+            total_minutes: 90,
+            sessions: 2,
+            focus_areas: ["practice", "review"]
+          },
+          {
+            day: "Wednesday",
+            total_minutes: 120,
+            sessions: 3,
+            focus_areas: ["deep work", "application"]
+          },
+          {
+            day: "Thursday",
+            total_minutes: 90,
+            sessions: 2,
+            focus_areas: ["practice", "refinement"]
+          },
+          {
+            day: "Friday",
+            total_minutes: 60,
+            sessions: 2,
+            focus_areas: ["review", "planning"]
+          }
+        ],
+        pomodoro_sequences: [
+          {
+            sequence_name: "Primary Goal Sprint",
+            total_duration_minutes: 95,
+            blocks: [
+              {"work_minutes": 25, "break_minutes": 5, "activity": "Core skill practice"},
+              {"work_minutes": 25, "break_minutes": 5, "activity": "Problem solving"},
+              {"work_minutes": 25, "break_minutes": 10, "activity": "Application practice"}
+            ]
+          }
+        ]
+      },
+      sleep_optimization: {
+        recommended_bedtime: "22:30",
+        recommended_wake_time: "06:30",
+        sleep_duration_hours: 8,
+        sleep_cycles: 5,
+        pre_sleep_routine: [
+          {"time": "21:30", "activity": "Wind down, no screens"},
+          {"time": "22:00", "activity": "Goal reflection & tomorrow planning"},
+          {"time": "22:15", "activity": "Reading or meditation"}
+        ],
+        morning_routine: [
+          {"time": "06:30", "activity": "Wake up, hydrate"},
+          {"time": "06:45", "activity": "Light exercise or stretching"},
+          {"time": "07:00", "activity": "Goal visualization & intention setting"}
+        ]
+      }
     },
     categorized_goals: {
       skills: [
@@ -631,28 +846,59 @@ const createFallbackResponse = (userGoal: string): GoalAnalysisResponse => {
     },
     recommended_sessions: [
       {
-        duration: "30 minutes",
-        type: "Quick wins",
-        description: "Perfect for daily habits and quick practice sessions",
-        best_for: ["skill practice", "habit building"]
-      },
-      {
-        duration: "60 minutes",
-        type: "Standard focus", 
-        description: "Ideal for skill development and focused learning",
-        best_for: ["skill learning", "project work"]
+        duration: "25 minutes",
+        type: "Pomodoro Sprint",
+        description: "Focused work with built-in breaks",
+        best_for: ["skill practice", "study sessions"],
+        optimal_times: ["09:00-12:00", "14:00-16:00"],
+        break_pattern: "5 min breaks, 15 min after 3 sessions"
       },
       {
         duration: "90 minutes",
-        type: "Deep work",
-        description: "For complex projects and intensive learning sessions",
-        best_for: ["complex projects", "intensive study"]
+        type: "Deep Work Block", 
+        description: "Uninterrupted focus for complex tasks",
+        best_for: ["project work", "creative tasks"],
+        optimal_times: ["09:00-10:30", "14:00-15:30"],
+        break_pattern: "15 min break every 90 minutes"
+      },
+      {
+        duration: "45 minutes",
+        type: "Learning Block",
+        description: "Structured learning with review time",
+        best_for: ["skill acquisition", "concept learning"],
+        optimal_times: ["10:00-11:00", "15:00-16:00"],
+        break_pattern: "10 min break after 45 minutes"
       }
     ],
     next_actions: [
-      "Set up a dedicated learning environment",
-      "Find and organize learning resources",
-      "Schedule your first learning session for tomorrow"
+      "Set up time-blocking system in your calendar (next 15 minutes)",
+      "Schedule your first Pomodoro session for tomorrow (next 10 minutes)", 
+      "Gather learning resources and set up workspace (within 2 hours)"
+    ],
+    energy_management: {
+      peak_hours: ["09:00-11:00", "15:00-17:00"],
+      low_energy_tasks: ["review", "planning", "organizing", "administrative tasks"],
+      high_energy_tasks: ["learning", "problem-solving", "creating", "complex analysis"],
+      break_recommendations: [
+        {"type": "micro", "duration_minutes": 2, "activity": "deep breathing or stretching"},
+        {"type": "short", "duration_minutes": 5, "activity": "walk or light movement"},
+        {"type": "medium", "duration_minutes": 15, "activity": "snack, hydration, and fresh air"},
+        {"type": "long", "duration_minutes": 30, "activity": "meal and complete mental reset"}
+      ]
+    },
+    // V2 Top-level fields
+    time_blocks: [
+      { period: "Morning", activity: "Preparation and planning", duration: "30 minutes" },
+      { period: "Mid-Morning", activity: "Deep work session 1", duration: "90 minutes" },
+      { period: "Afternoon", activity: "Review and practice", duration: "60 minutes" },
+      { period: "Evening", activity: "Reflection and planning", duration: "15 minutes" }
+    ],
+    sleep_optimization: "Maintain consistent sleep schedule: 10:30 PM - 6:30 AM for optimal learning and energy management. Create pre-sleep routine 30 minutes before bed.",
+    schedule_suggestions: [
+      "Schedule deep work during your peak energy hours (9-11 AM or 3-5 PM)",
+      "Use Pomodoro technique for sustained focus sessions",
+      "Plan weekly review sessions to track progress and adjust schedule",
+      "Block time for reflection and goal adjustment every Sunday"
     ]
   };
 };

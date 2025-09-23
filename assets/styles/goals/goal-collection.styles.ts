@@ -15,6 +15,15 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     position: 'relative',
   },
 
+  // Scroll container for keyboard handling
+  scrollContainer: {
+    flex: 1,
+  },
+
+  scrollContent: {
+    flexGrow: 1,
+  },
+
   // Header section with centered content
   headerSection: {
     flex: 1,
@@ -33,7 +42,18 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     backgroundColor: 'transparent',     // Remove background for Lottie
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8, // Further reduced from 16
+    marginBottom: -8, // Negative margin to bring heading closer
+  },
+
+  // Icon container when keyboard is visible - more compact
+  iconContainerKeyboard: {
+    width: 280, // Smaller when keyboard is visible
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 0,
   },
 
   iconSymbol: {
@@ -51,6 +71,7 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     letterSpacing: -0.6, // Reduced from -0.8
     lineHeight: 30, // Reduced from 36
     marginBottom: 24, // Reduced from 32
+    marginTop: -16, // Negative margin to bring closer to Lottie
     fontFamily: Platform.OS === 'ios' 
       ? 'Menlo' 
       : Platform.OS === 'android' 
@@ -64,7 +85,8 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
   // Input section
   inputSection: {
     paddingHorizontal: 24,
-    paddingBottom: 32,
+    paddingBottom: 48, // Increased for better keyboard clearance
+    paddingTop: 16,
   },
 
   // Chat-style input container - Enhanced with vibrant colors
@@ -82,7 +104,8 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start', // Changed from 'center' to 'flex-start' for better expansion
+    paddingTop: 16, // Ensure proper top padding
   },
 
   inputContainerFocused: {
@@ -94,7 +117,7 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     borderWidth: 2,                             // Thicker border when focused
   },
 
-  // Text input - Fixed contrast issues
+  // Text input - Fixed contrast issues and improved expansion
   textInput: {
     flex: 1,
     fontSize: 16,
@@ -103,13 +126,15 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 4,
     minHeight: 24,
+    maxHeight: 120, // Limit expansion to 5 lines approximately
+    textAlignVertical: 'top',
   },
 
   placeholder: {
     color: theme.colors.textTertiary,
   },
 
-  // Action buttons
+  // Action buttons - Improved alignment for expanding text
   actionButton: {
     width: 40,
     height: 40,
@@ -117,6 +142,7 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+    alignSelf: 'center', // Center align with the input container
   },
 
   sendButton: {
@@ -140,8 +166,11 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
 
   headerSectionKeyboard: {
     flex: 0,
-    paddingTop: 20,
-    paddingBottom: 24,
+    paddingTop: 10, // Reduced padding when keyboard is visible
+    paddingBottom: 16, // Reduced bottom padding
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
   },
 
   // Suggestions area (for future use)

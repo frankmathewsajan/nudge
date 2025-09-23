@@ -8,13 +8,13 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createGoalPlanningStyles } from '../../assets/styles/goals/goal-planning.styles';
@@ -94,7 +94,12 @@ export const GoalPlanningScreen: React.FC<GoalPlanningScreenProps> = ({
     resources: goalAnalysis.primary_goal.resources_needed,
     nextActions: goalAnalysis.next_actions,
     difficulty: goalAnalysis.primary_goal.difficulty,
-    timeline: goalAnalysis.primary_goal.estimated_timeline
+    timeline: goalAnalysis.primary_goal.estimated_timeline,
+    // V2 Enhanced Features
+    timeBlocks: goalAnalysis.time_blocks || [],
+    sleepOptimization: goalAnalysis.sleep_optimization,
+    energyManagement: goalAnalysis.energy_management,
+    scheduleSuggestions: goalAnalysis.schedule_suggestions || []
   } : {
     // Fallback data when API hasn't responded yet or failed
     title: `Planning for: "${displayGoal}"`,
@@ -116,7 +121,12 @@ export const GoalPlanningScreen: React.FC<GoalPlanningScreenProps> = ({
     resources: ["Resource recommendations coming soon..."],
     nextActions: ["Wait for analysis to complete", "Review recommendations", "Choose your session duration"],
     difficulty: "intermediate",
-    timeline: "Timeline will be provided after analysis"
+    timeline: "Timeline will be provided after analysis",
+    // V2 Enhanced Features - Fallback
+    timeBlocks: [],
+    sleepOptimization: "Sleep optimization recommendations will be provided after analysis.",
+    energyManagement: "Energy management tips will be personalized based on your goal and schedule.",
+    scheduleSuggestions: []
   };
 
   const handleTimeSlotSelect = (timeSlotId: string) => {
@@ -310,6 +320,102 @@ export const GoalPlanningScreen: React.FC<GoalPlanningScreenProps> = ({
                   <View key={index} style={styles.stepItem}>
                     <Text style={styles.stepNumber}>{index + 1}</Text>
                     <Text style={styles.stepText}>{action}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* V2 Enhanced Features - Time Management */}
+            {planningData.timeBlocks && planningData.timeBlocks.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Optimal Time Blocks:</Text>
+                {planningData.timeBlocks.map((block: any, index: number) => (
+                  <View key={index} style={styles.stepItem}>
+                    <MaterialIcons name="schedule" size={16} color={theme.colors.accent} style={{marginRight: 8, marginTop: 3}} />
+                    <Text style={styles.bodyText}>
+                      <Text style={{fontWeight: 'bold'}}>{block.period}:</Text> {block.activity} ({block.duration})
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Sleep Optimization */}
+            {planningData.sleepOptimization && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Sleep & Recovery:</Text>
+                <View style={styles.stepItem}>
+                  <MaterialIcons name="bedtime" size={16} color={theme.colors.accent} style={{marginRight: 8, marginTop: 3}} />
+                  <Text style={styles.bodyText}>{planningData.sleepOptimization}</Text>
+                </View>
+              </View>
+            )}
+
+            {/* Energy Management */}
+            {planningData.energyManagement && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Energy Management:</Text>
+                {typeof planningData.energyManagement === 'string' ? (
+                  <View style={styles.stepItem}>
+                    <MaterialIcons name="bolt" size={16} color={theme.colors.accent} style={{marginRight: 8, marginTop: 3}} />
+                    <Text style={styles.bodyText}>{planningData.energyManagement}</Text>
+                  </View>
+                ) : (
+                  <>
+                    {planningData.energyManagement.peak_hours && (
+                      <View style={styles.stepItem}>
+                        <MaterialIcons name="trending-up" size={16} color={theme.colors.accent} style={{marginRight: 8, marginTop: 3}} />
+                        <Text style={styles.bodyText}>
+                          <Text style={{fontWeight: 'bold'}}>Peak Energy:</Text> {planningData.energyManagement.peak_hours.join(', ')}
+                        </Text>
+                      </View>
+                    )}
+                    {planningData.energyManagement.high_energy_tasks && planningData.energyManagement.high_energy_tasks.length > 0 && (
+                      <View style={styles.stepItem}>
+                        <MaterialIcons name="flash-on" size={16} color={theme.colors.accent} style={{marginRight: 8, marginTop: 3}} />
+                        <Text style={styles.bodyText}>
+                          <Text style={{fontWeight: 'bold'}}>High Energy Tasks:</Text> {planningData.energyManagement.high_energy_tasks.join(', ')}
+                        </Text>
+                      </View>
+                    )}
+                    {planningData.energyManagement.low_energy_tasks && planningData.energyManagement.low_energy_tasks.length > 0 && (
+                      <View style={styles.stepItem}>
+                        <MaterialIcons name="battery-saver" size={16} color={theme.colors.accent} style={{marginRight: 8, marginTop: 3}} />
+                        <Text style={styles.bodyText}>
+                          <Text style={{fontWeight: 'bold'}}>Low Energy Tasks:</Text> {planningData.energyManagement.low_energy_tasks.join(', ')}
+                        </Text>
+                      </View>
+                    )}
+                    {planningData.energyManagement.break_recommendations && planningData.energyManagement.break_recommendations.length > 0 && (
+                      <>
+                        <View style={styles.stepItem}>
+                          <MaterialIcons name="free-breakfast" size={16} color={theme.colors.accent} style={{marginRight: 8, marginTop: 3}} />
+                          <Text style={styles.bodyText}>
+                            <Text style={{fontWeight: 'bold'}}>Break Recommendations:</Text>
+                          </Text>
+                        </View>
+                        {planningData.energyManagement.break_recommendations.map((breakRec: any, idx: number) => (
+                          <View key={idx} style={[styles.stepItem, {marginLeft: 24}]}>
+                            <Text style={styles.bodyText}>
+                              • {breakRec.type} ({breakRec.duration_minutes}min): {breakRec.activity}
+                            </Text>
+                          </View>
+                        ))}
+                      </>
+                    )}
+                  </>
+                )}
+              </View>
+            )}
+
+            {/* Schedule Suggestions */}
+            {planningData.scheduleSuggestions && planningData.scheduleSuggestions.length > 0 && (
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Schedule Suggestions:</Text>
+                {planningData.scheduleSuggestions.map((suggestion: string, index: number) => (
+                  <View key={index} style={styles.stepItem}>
+                    <MaterialIcons name="event" size={16} color={theme.colors.accent} style={{marginRight: 8, marginTop: 3}} />
+                    <Text style={styles.bodyText}>{suggestion}</Text>
                   </View>
                 ))}
               </View>
