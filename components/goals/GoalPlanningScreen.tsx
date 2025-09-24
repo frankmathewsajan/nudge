@@ -19,10 +19,18 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createGoalPlanningStyles } from '../../assets/styles/goals/goal-planning.styles';
 import { useTheme } from '../../contexts/ThemeContext';
-import { GoalAnalysisResponse, summarizeGoal } from '../../services/geminiService';
+import { GoalAnalysisResponse } from '../../services/geminiService';
 import AnimatedBackground from '../ui/AnimatedBackground';
 import { TerminalLoader } from '../ui/TerminalLoader';
 import { ThemeToggle } from '../ui/ThemeToggle';
+
+// Simple goal summarization function
+const summarizeGoal = (goal: string): string => {
+  if (goal.length <= 80) return goal;
+  const words = goal.split(' ');
+  if (words.length <= 12) return goal;
+  return words.slice(0, 12).join(' ') + '...';
+};
 
 interface GoalPlanningScreenProps {
   goal: string;

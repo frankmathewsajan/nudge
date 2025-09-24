@@ -9,30 +9,105 @@ import { MaterialIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createGoalCollectionStyles } from '../../assets/styles/goals/goal-collection.styles';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGoalCollection } from '../../hooks/goals/useGoalCollection';
 import { useKeyboardAware } from '../../hooks/goals/useKeyboardAware';
-import { analyzeGoalWithGemini, createSmartGoalSummary, GoalAnalysisResponse } from '../../services/geminiService';
+import { analyzeGoalsWithFirebaseAI } from '../../services/firebaseAiService';
+import { GoalAnalysisResponse } from '../../services/geminiService';
 import { storageService } from '../../services/storageService';
+import { GoalAnalysisResponse as V2GoalAnalysisResponse } from '../../utils/geminiTypes';
 import AnimatedBackground from '../ui/AnimatedBackground';
 import { SettingsScreen } from '../ui/SettingsScreen';
 import { TerminalLoader } from '../ui/TerminalLoader';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { GoalHistoryTab } from './GoalHistoryTab';
 import { GoalPlanningScreen } from './GoalPlanningScreen';
+
+/**
+ * Convert V2 GoalAnalysisResponse to the old format expected by the UI
+ */
+const convertV2ToOldFormat = (v2Response: V2GoalAnalysisResponse): GoalAnalysisResponse => {
+  const primaryGoal = v2Response.goalAnalysis.primaryGoals[0];
+  
+  return {
+    primary_goal: {
+      name: primaryGoal?.goal || 'Goal Analysis',
+      analysis: `Priority: ${primaryGoal?.priority}, Difficulty: ${primaryGoal?.difficulty}`,
+      smart_breakdown: v2Response.goalAnalysis.subGoals,
+      time_recommendation: v2Response.timeEstimation.dailyCommitment,
+      session_structure: v2Response.timeEstimation.weeklyReview,
+      difficulty: (primaryGoal?.difficulty as any) || 'intermediate',
+      estimated_timeline: v2Response.timeEstimation.totalDuration,
+      progress_milestones: v2Response.timeEstimation.milestones.map(m => `${m.name}: ${m.duration}`),
+      motivation_tips: v2Response.personalizedSchedule.adaptiveRecommendations.join('. '),
+      common_obstacles: v2Response.progressTracking.adjustmentTriggers,
+      resources_needed: primaryGoal?.resources_needed || [],
+      time_blocks: primaryGoal?.time_blocks
+    },
+    categorized_goals: {
+      skills: v2Response.goalAnalysis.primaryGoals.map(goal => ({
+        name: goal.goal,
+        status: goal.status,
+        priority: goal.priority,
+        time_estimate: goal.time_estimate,
+        difficulty: goal.difficulty
+      })),
+      career: [],
+      projects: [],
+      health: [],
+      personal: [],
+      pain_points: []
+    },
+    recommended_sessions: [
+      {
+        duration: '25 minutes',
+        type: 'Pomodoro Sprint',
+        description: 'Focused work with built-in breaks',
+        best_for: ['skill practice'],
+        optimal_times: v2Response.personalizedSchedule.preferredTimes,
+        break_pattern: '5 min breaks, 15 min after 4 sessions'
+      }
+    ],
+    next_actions: [
+      'Start with first goal',
+      'Set up daily routine',
+      'Track progress regularly'
+    ],
+    energy_management: {
+      peak_hours: ['09:00-11:00'],
+      low_energy_tasks: ['review'],
+      high_energy_tasks: ['learning'],
+      break_recommendations: [
+        { type: 'micro', duration_minutes: 2, activity: 'deep breathing' },
+        { type: 'short', duration_minutes: 5, activity: 'walk or stretch' }
+      ]
+    }
+  };
+};
+
+/**
+ * Create a simple goal summary from the goal text
+ */
+const createSimpleGoalSummary = (goalText: string): string => {
+  const words = goalText.trim().split(' ');
+  if (words.length <= 8) {
+    return goalText;
+  }
+  return words.slice(0, 8).join(' ') + '...';
+};
 
 interface GoalCollectionScreenProps {
   onComplete?: (goals: any[]) => void;
@@ -112,7 +187,14 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
         if (setTerminalStage) setTerminalStage('parsing');
       }, 2000);
       
-      const analysis = await analyzeGoalWithGemini(currentGoalText);
+      const v2Analysis = await analyzeGoalsWithFirebaseAI({
+        goals: [currentGoalText],
+        userContext: {
+          availability: ['morning'],
+          currentTime: new Date().toISOString()
+        }
+      });
+      const analysis = convertV2ToOldFormat(v2Analysis);
       setTerminalStage('success');
       setGoalAnalysis(analysis);
       setCanRetry(false);
@@ -160,7 +242,7 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       let goalSummary = goal.text;
       try {
         console.log('Creating AI-powered goal summary...');
-        goalSummary = await createSmartGoalSummary(goal.text);
+        goalSummary = createSimpleGoalSummary(goal.text);
         console.log('Smart summary created:', goalSummary);
       } catch (error) {
         console.log('Failed to create AI summary, using original text');
@@ -176,7 +258,14 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
           if (setTerminalStage) setTerminalStage('parsing');
         }, 3000);
         
-        const analysis = await analyzeGoalWithGemini(goal.text);
+        const v2Analysis = await analyzeGoalsWithFirebaseAI({
+          goals: [goal.text],
+          userContext: {
+            availability: ['morning'],
+            currentTime: new Date().toISOString()
+          }
+        });
+        const analysis = convertV2ToOldFormat(v2Analysis);
         
         // Check if this is a fallback response (which means there was an error)
         const isFallbackResponse = analysis.primary_goal.analysis.includes("This is a great goal that can significantly improve your skills and capabilities. Breaking it down into manageable steps with proper time management");

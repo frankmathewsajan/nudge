@@ -107,3 +107,126 @@ export interface AdaptiveSchedule {
   break_suggestions: string[];
   flexibility_buffer: number; // minutes
 }
+
+// V2 Schema Types - Enhanced Goal Analysis
+export type AnalysisStatus = 'success' | 'partial' | 'error';
+
+export interface GoalAnalysisRequest {
+  goals: string[];
+  userContext?: {
+    availability?: string[];
+    preferences?: Record<string, any>;
+    currentTime?: string;
+  };
+}
+
+export interface TimeBlock {
+  time: string;
+  duration_minutes: number;
+  activity: string;
+  type: 'preparation' | 'deep_work' | 'pomodoro' | 'review' | 'break';
+  energy_level: 'high' | 'medium' | 'low';
+  pomodoro_count?: number;
+}
+
+export interface WeeklySession {
+  day: string;
+  total_minutes: number;
+  sessions: number;
+  focus_areas: string[];
+}
+
+export interface PomodoroBlock {
+  work_minutes: number;
+  break_minutes: number;
+  activity: string;
+}
+
+export interface PomodoroSequence {
+  sequence_name: string;
+  total_duration_minutes: number;
+  blocks: PomodoroBlock[];
+}
+
+export interface TimeBlocks {
+  daily_schedule: TimeBlock[];
+  weekly_schedule: WeeklySession[];
+  pomodoro_sequences: PomodoroSequence[];
+}
+
+export interface GoalItem {
+  goal: string;
+  status: string;
+  priority: string;
+  deadline?: string;
+  time_estimate?: string;
+  difficulty?: string;
+  resources_needed?: string[];
+  time_blocks?: TimeBlocks;
+}
+
+export interface GoalAnalysis {
+  primaryGoals: GoalItem[];
+  subGoals: string[];
+  dependencies: string[];
+  successMetrics: string[];
+}
+
+export interface Milestone {
+  name: string;
+  duration: string;
+  description: string;
+}
+
+export interface TimeEstimation {
+  totalDuration: string;
+  milestones: Milestone[];
+  dailyCommitment: string;
+  weeklyReview: string;
+}
+
+export interface WeeklyStructure {
+  [day: string]: string[];
+}
+
+export interface PersonalizedSchedule {
+  preferredTimes: string[];
+  weeklyStructure: WeeklyStructure;
+  adaptiveRecommendations: string[];
+}
+
+export interface Checkpoint {
+  week: number;
+  focus: string;
+  metrics: string[];
+}
+
+export interface ProgressTracking {
+  checkpoints: Checkpoint[];
+  adjustmentTriggers: string[];
+  celebrationMoments: string[];
+}
+
+export interface AnalysisMetadata {
+  analysisTimestamp: string;
+  modelVersion: string;
+  userSegment?: string;
+  confidenceScore?: number;
+  processingTime?: string;
+}
+
+export interface AnalysisError {
+  message: string;
+  code: string;
+  timestamp: string;
+}
+
+export interface GoalAnalysisResponse {
+  status: AnalysisStatus;
+  goalAnalysis: GoalAnalysis;
+  timeEstimation: TimeEstimation;
+  personalizedSchedule: PersonalizedSchedule;
+  progressTracking: ProgressTracking;
+  metadata?: AnalysisMetadata;
+  error?: AnalysisError;
+}

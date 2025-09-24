@@ -1,22 +1,39 @@
-// Home Screen - Goal Collection Interface
-// Clean onboarding flow followed by goal collection
+// Home Screen - Authentication -> Onboarding -> Goal Collection
+// Clean flow: Auth -> Onboarding -> Goals
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
+import { AuthScreen } from '../../components/auth/AuthScreen';
 import { GoalCollectionScreen } from '../../components/goals/GoalCollectionScreen';
 import { FormOnboarding } from '../../components/onboarding/FormOnboarding';
+import authService, { AuthUser } from '../../services/authService';
 
 export default function HomeScreen() {
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showGoalCollection, setShowGoalCollection] = useState(false);
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    checkOnboardingStatus();
+    checkAppState();
   }, []);
 
-  const checkOnboardingStatus = async () => {
+  const checkAppState = async () => {
+    try {
+      // First check authentication
+      const user = authService.getCurrentUser();
+      if (user) {
+        setCurrentUser(user);
+        await checkOnboardingStatus(user);
+      }
+    } catch (error) {
+      console.error('Error checking app state:', error);
+    }
+    setIsLoading(false);
+  };
+
+  const checkOnboardingStatus = async (user: AuthUser) => {
     try {
       const completed = await AsyncStorage.getItem('@nudge_onboarding_completed');
       const goalsCompleted = await AsyncStorage.getItem('@nudge_goals_completed');
@@ -29,11 +46,20 @@ export default function HomeScreen() {
         if (goalsCompleted !== 'true') {
           setShowGoalCollection(true);
         }
+      } else {
+        // Show onboarding if not completed
+        setShowOnboarding(true);
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error);
+      setShowOnboarding(true);
     }
-    setIsLoading(false);
+  };
+
+  const handleAuthSuccess = async (user: AuthUser) => {
+    console.log('🔐 Authentication successful:', user.displayName);
+    setCurrentUser(user);
+    await checkOnboardingStatus(user);
   };
 
   const handleOnboardingComplete = async (name: string) => {
@@ -76,14 +102,21 @@ export default function HomeScreen() {
     return null; // Or a loading spinner
   }
 
+  // Authentication flow - show auth screen if not authenticated
+  if (!currentUser) {
+    return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
+  }
+
+  // Onboarding flow - show if authenticated but not onboarded
   if (showOnboarding) {
     return <FormOnboarding onComplete={handleOnboardingComplete} />;
   }
 
+  // Goal collection flow - show if onboarded but goals not set
   if (showGoalCollection) {
     return <GoalCollectionScreen onComplete={handleGoalsComplete} />;
   }
 
-  // Main app content (placeholder for now)
+  // Main app content - show goal collection as main screen for now
   return <GoalCollectionScreen onComplete={handleGoalsComplete} />;
 }

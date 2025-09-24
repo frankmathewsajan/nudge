@@ -4,6 +4,9 @@ import Svg, { Circle, Defs, G, LinearGradient, Polygon, Stop } from 'react-nativ
 import { useTheme } from '../../contexts/ThemeContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+// Add extra height to ensure full coverage with spinning elements
+const extendedHeight = screenHeight * 1.5;
+const extendedWidth = screenWidth * 1.2;
 
 interface AnimatedBackgroundProps {
   intensity?: 'subtle' | 'moderate' | 'dynamic';
@@ -36,8 +39,8 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
     const horizontalSpacing = hexRadius * 1.73; // √3 * radius
     const verticalSpacing = hexRadius * 1.5;
     
-    for (let row = -2; row < Math.ceil(screenHeight / verticalSpacing) + 2; row++) {
-      for (let col = -2; col < Math.ceil(screenWidth / horizontalSpacing) + 2; col++) {
+    for (let row = -4; row < Math.ceil(extendedHeight / verticalSpacing) + 4; row++) {
+      for (let col = -4; col < Math.ceil(extendedWidth / horizontalSpacing) + 4; col++) {
         const x = col * horizontalSpacing + (row % 2) * (horizontalSpacing / 2);
         const y = row * verticalSpacing;
         
