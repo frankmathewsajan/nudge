@@ -1,11 +1,9 @@
-import { initializeApp } from 'firebase/app';
-
-// Optionally import the services that you want to use
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import { getAI, GoogleAIBackend } from 'firebase/ai';
+import { initializeApp } from 'firebase/app';
 import { getAuth, initializeAuth } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { Platform } from 'react-native';
 
 // Initialize Firebase
 const firebaseConfig = {
@@ -20,37 +18,51 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Auth with React Native AsyncStorage persistence
-// Create a custom persistence wrapper that matches Firebase expectations
-const getReactNativePersistence = (storage: any) => ({
-  ...storage,
-  _delegate: storage,
-  type: 'LOCAL'
-});
+// Import getReactNativePersistence dynamically to avoid TypeScript issues
+const getReactNativePersistence = (() => {
+  try {
+    // Try to get the official function
+    const authModule = require('firebase/auth');
+    if (authModule.getReactNativePersistence) {
+      return authModule.getReactNativePersistence;
+    }
+  } catch (error) {
+    console.warn('Official getReactNativePersistence not available, using fallback');
+  }
+  
+  // Fallback implementation
+  return (storage: typeof ReactNativeAsyncStorage) => ({
+    type: 'LOCAL' as const,
+    _isAvailable: () => Promise.resolve(true),
+    _set: (key: string, value: string) => storage.setItem(key, value),
+    _get: (key: string) => storage.getItem(key),
+    _remove: (key: string) => storage.removeItem(key),
+  });
+})();
 
+// Initialize Firebase Auth with AsyncStorage for React Native
 let auth: any;
 try {
-  // For React Native, initialize with AsyncStorage persistence
-  if (Platform.OS !== 'web') {
-    auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(ReactNativeAsyncStorage)
-    });
-  } else {
-    auth = getAuth(app);
-  }
-} catch (error) {
+  // Initialize auth with React Native AsyncStorage persistence
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+  });
+  console.log('✅ Firebase Auth initialized with AsyncStorage persistence');
+} catch (error: any) {
   // If auth is already initialized, get the existing instance
+  console.log('⚠️ Auth already initialized, using existing instance:', error.message);
   auth = getAuth(app);
 }
 
 // Email/Password authentication only - no Google Sign-In needed
 
 // Initialize other Firebase services
+const firestore = getFirestore(app);
 const storage = getStorage(app);
 const ai = getAI(app, { backend: new GoogleAIBackend() });
 
 // For more information on how to access Firebase in your project,
 // see the Firebase documentation: https://firebase.google.com/docs/web/setup#access-firebase
 
-export { ai, auth, storage };
+export { ai, app, auth, firestore, getAuth, storage };
 export default app;

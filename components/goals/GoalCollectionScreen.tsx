@@ -30,7 +30,6 @@ import { GoalAnalysisResponse } from '../../services/geminiService';
 import { storageService } from '../../services/storageService';
 import { GoalAnalysisResponse as V2GoalAnalysisResponse } from '../../utils/geminiTypes';
 import AnimatedBackground from '../ui/AnimatedBackground';
-import { SettingsScreen } from '../ui/SettingsScreen';
 import { TerminalLoader } from '../ui/TerminalLoader';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { GoalHistoryTab } from './GoalHistoryTab';
@@ -111,6 +110,7 @@ const createSimpleGoalSummary = (goalText: string): string => {
 
 interface GoalCollectionScreenProps {
   onComplete?: (goals: any[]) => void;
+  onOpenSettings?: () => void;
 }
 
 /**
@@ -123,7 +123,8 @@ interface GoalCollectionScreenProps {
  * - Clean goal submission flow
  */
 export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
-  onComplete
+  onComplete,
+  onOpenSettings
 }) => {
   const { theme, toggleTheme } = useTheme();
   const styles = createGoalCollectionStyles(theme);
@@ -143,7 +144,6 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   const [terminalStage, setTerminalStage] = useState<'analyzing' | 'parsing' | 'success' | 'error'>('analyzing');
   const [activeTab, setActiveTab] = useState<'create' | 'history'>('create');
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
   const inputRef = useRef<TextInput>(null);
   const animatedValue = useRef(new Animated.Value(1)).current;
   
@@ -158,17 +158,15 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   // Input field state layer animation
   const inputStateValue = useRef(new Animated.Value(0)).current;
 
-  // Reset animations when settings modal closes
+  // Reset animations on component mount
   useEffect(() => {
-    if (!showSettings) {
-      // Reset all animation values to prevent UI misalignment
-      iconPulseValue.setValue(1);
-      iconScaleValue.setValue(1);
-      iconOpacityValue.setValue(0.8);
-      animatedValue.setValue(1);
-      inputStateValue.setValue(0);
-    }
-  }, [showSettings, iconPulseValue, iconScaleValue, iconOpacityValue, animatedValue, inputStateValue]);
+    // Reset all animation values to prevent UI misalignment
+    iconPulseValue.setValue(1);
+    iconScaleValue.setValue(1);
+    iconOpacityValue.setValue(0.8);
+    animatedValue.setValue(1);
+    inputStateValue.setValue(0);
+  }, [iconPulseValue, iconScaleValue, iconOpacityValue, animatedValue, inputStateValue]);
 
   // Retry analysis function
   const retryAnalysis = async () => {
@@ -642,10 +640,30 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       {/* Animated Background */}
       <AnimatedBackground intensity="subtle" />
       
-      {/* Header with Settings, Centered Tabs, and Theme Toggle */}
+      {/* Header with Centered Tabs and Controls */}
       <View style={styles.headerRow}>
-        <TouchableOpacity onPress={() => setShowSettings(true)} style={styles.settingsButton}>
-          <MaterialIcons name="settings" size={20} color={theme.colors.textSecondary} />
+        {/* Settings Button */}
+        <TouchableOpacity
+          style={styles.settingsButton}
+          onPress={() => {
+            console.log('🔧 Settings button pressed');
+            console.log('🔧 onOpenSettings function:', !!onOpenSettings);
+            console.log('🔧 onOpenSettings type:', typeof onOpenSettings);
+            if (onOpenSettings) {
+              console.log('🔧 Calling onOpenSettings...');
+              onOpenSettings();
+              console.log('🔧 onOpenSettings called successfully');
+            } else {
+              console.log('❌ onOpenSettings not provided');
+            }
+          }}
+          activeOpacity={0.7}
+        >
+          <MaterialIcons 
+            name="settings" 
+            size={22} 
+            color={theme.colors.textPrimary} 
+          />
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
@@ -933,13 +951,6 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       </KeyboardAvoidingView>
       )}
 
-      {/* Settings Modal */}
-      {showSettings && (
-        <SettingsScreen 
-          theme={theme} 
-          onClose={() => setShowSettings(false)} 
-        />
-      )}
     </SafeAreaView>
   );
 };

@@ -6,16 +6,16 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    SafeAreaView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Animated,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -316,8 +316,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
       if (authMode === 'signup') {
         const user = await authService.signUpWithEmail(email.trim(), password);
         
-        // Send email verification
-        await authService.sendEmailVerification();
+        // Email verification is automatically sent in signUpWithEmail
         setEmailVerificationSent(true);
         
         Alert.alert(

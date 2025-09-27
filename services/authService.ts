@@ -5,15 +5,17 @@
  */
 
 import {
-    createUserWithEmailAndPassword,
-    onAuthStateChanged,
-    sendEmailVerification,
-    signInWithEmailAndPassword,
-    signOut,
-    User,
+  createUserWithEmailAndPassword,
+  deleteUser,
+  onAuthStateChanged,
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+  signOut,
+  User,
 } from 'firebase/auth';
 
 import { auth } from '../config/firebase';
+import userProfileService from './userProfileService';
 
 export interface AuthUser {
   uid: string;
@@ -31,14 +33,38 @@ const convertFirebaseUser = (user: User): AuthUser => ({
   isEmailVerified: user.emailVerified,
 });
 
+// Signup rate limiting
+let lastSignupAttempt: number = 0;
+const SIGNUP_COOLDOWN = 5000; // 5 seconds between signup attempts
+
 export const signUpWithEmail = async (
   email: string,
   password: string,
+  displayName?: string,
 ): Promise<AuthUser> => {
   try {
-    console.log('� Starting email sign-up...');
+    // Check signup rate limiting
+    const now = Date.now();
+    if (now - lastSignupAttempt < SIGNUP_COOLDOWN) {
+      const remainingSeconds = Math.ceil((SIGNUP_COOLDOWN - (now - lastSignupAttempt)) / 1000);
+      throw new Error(`Please wait ${remainingSeconds} seconds before trying to sign up again.`);
+    }
+    
+    lastSignupAttempt = now;
+    
+    console.log('📝 Starting email sign-up...');
     const result = await createUserWithEmailAndPassword(auth, email, password);
-    console.log('✅ Email sign-up successful');
+    
+    // Automatically send email verification (only once during signup)
+    logEmailSend('SIGNUP');
+    console.log('📧 Sending verification email...');
+    await sendEmailVerification(result.user);
+    console.log('✅ Verification email sent successfully');
+    
+    // Create user profile in Firestore with display name
+    await userProfileService.createUserProfile(result.user.uid, email, displayName ? { displayName } : undefined);
+    
+    console.log('✅ Email sign-up successful and profile created');
     return convertFirebaseUser(result.user);
   } catch (error: any) {
     console.error('❌ Email sign-up failed:', error);
@@ -56,6 +82,9 @@ export const signUpWithEmail = async (
     }
     if (error.code === 'auth/invalid-email') {
       throw new Error('Please enter a valid email address.');
+    }
+    if (error.code === 'auth/too-many-requests') {
+      throw new Error('Too many requests. Please wait a few minutes before trying again.');
     }
 
     throw new Error(`Email sign-up failed: ${error.message}`);
@@ -91,6 +120,9 @@ export const signInWithEmail = async (
     if (error.code === 'auth/user-disabled') {
       throw new Error('This account has been disabled. Please contact support.');
     }
+    if (error.code === 'auth/too-many-requests') {
+      throw new Error('Too many requests. Please wait a few minutes before trying again.');
+    }
 
     throw new Error(`Email sign-in failed: ${error.message}`);
   }
@@ -112,11 +144,18 @@ export const handleAuthPersistence = async (): Promise<AuthUser | null> => {
 
 export const signOutUser = async (): Promise<void> => {
   try {
+    console.log('🚪 Signing out user...');
+    
+    // Clear user profile data from local storage
+    await userProfileService.clearUserProfile();
+    
+    // Sign out from Firebase
     await signOut(auth);
-    console.log('👋 User signed out successfully');
+    
+    console.log('✅ User signed out successfully');
   } catch (error: any) {
-    console.error('❌ Sign out failed:', error);
-    throw new Error(`Sign out failed: ${error.message}`);
+    console.error('❌ Error signing out:', error);
+    throw error;
   }
 };
 
@@ -132,6 +171,15 @@ export const onAuthStateChange = (callback: (user: AuthUser | null) => void) =>
 
 export const isAuthenticated = (): boolean => auth.currentUser !== null;
 
+// Rate limiting for email verification
+let lastEmailSent: number = 0;
+const EMAIL_COOLDOWN = 60000; // 1 minute cooldown
+
+// Debug utility to track email sends
+const logEmailSend = (context: string) => {
+  console.log(`📧 [${context}] Email verification requested at ${new Date().toISOString()}`);
+};
+
 export const sendEmailVerificationToCurrentUser = async (): Promise<void> => {
   try {
     const user = auth.currentUser;
@@ -139,8 +187,23 @@ export const sendEmailVerificationToCurrentUser = async (): Promise<void> => {
       throw new Error('No authenticated user found');
     }
     
+    // Check if user is already verified
+    if (user.emailVerified) {
+      console.log('📧 User email is already verified, skipping verification email');
+      return;
+    }
+    
+    // Check rate limiting
+    const now = Date.now();
+    if (now - lastEmailSent < EMAIL_COOLDOWN) {
+      const remainingSeconds = Math.ceil((EMAIL_COOLDOWN - (now - lastEmailSent)) / 1000);
+      throw new Error(`Please wait ${remainingSeconds} seconds before requesting another verification email.`);
+    }
+    
+    logEmailSend('RESEND');
     console.log('📧 Sending email verification...');
     await sendEmailVerification(user);
+    lastEmailSent = now;
     console.log('✅ Email verification sent successfully');
   } catch (error: any) {
     console.error('❌ Failed to send email verification:', error);
@@ -148,13 +211,113 @@ export const sendEmailVerificationToCurrentUser = async (): Promise<void> => {
   }
 };
 
+export const checkEmailVerification = (): boolean => {
+  const user = auth.currentUser;
+  return user ? user.emailVerified : false;
+};
+
+export const reloadUserAndCheckVerification = async (): Promise<boolean> => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      return false;
+    }
+    
+    await user.reload();
+    return user.emailVerified;
+  } catch (error: any) {
+    console.error('❌ Error reloading user:', error);
+    return false;
+  }
+};
+
+export const checkOnboardingStatus = async (): Promise<boolean> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      return false;
+    }
+    
+    return await userProfileService.isOnboardingCompleted(currentUser.uid);
+  } catch (error) {
+    console.error('❌ Error checking onboarding status:', error);
+    return false;
+  }
+};
+
+export const completeOnboarding = async (): Promise<void> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      throw new Error('No authenticated user found');
+    }
+    
+    await userProfileService.markOnboardingCompleted(currentUser.uid);
+    console.log('✅ Onboarding completed');
+  } catch (error) {
+    console.error('❌ Error completing onboarding:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete Account
+ * 
+ * Permanently deletes the current user's account and all associated data
+ */
+export const deleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      return { success: false, error: 'No authenticated user found' };
+    }
+
+    console.log('🗑️ Deleting user account and data...');
+    
+    // First delete user profile data from Firestore
+    try {
+      await userProfileService.deleteUserProfile(currentUser.uid);
+      console.log('✅ User profile data deleted');
+    } catch (profileError) {
+      console.warn('⚠️ Error deleting profile data:', profileError);
+      // Continue with account deletion even if profile deletion fails
+    }
+
+    // Delete the Firebase Auth account
+    await deleteUser(currentUser);
+    console.log('✅ Firebase Auth account deleted');
+
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Error deleting account:', error);
+    
+    if (error instanceof Error) {
+      // Handle specific Firebase Auth errors
+      if (error.message.includes('auth/requires-recent-login')) {
+        return { 
+          success: false, 
+          error: 'For security reasons, please log out and log back in before deleting your account.' 
+        };
+      }
+      return { success: false, error: error.message };
+    }
+    
+    return { success: false, error: 'Failed to delete account' };
+  }
+};
+
 export default {
   signUpWithEmail,
   signInWithEmail,
   sendEmailVerification: sendEmailVerificationToCurrentUser,
+  checkEmailVerification,
+  reloadUserAndCheckVerification,
   handleAuthPersistence,
-  signOutUser,
+  signOut: signOutUser,
   getCurrentUser,
   onAuthStateChange,
   isAuthenticated,
+  checkOnboardingStatus,
+  completeOnboarding,
+  deleteAccount,
 };

@@ -1,23 +1,33 @@
 // Home Screen - Authentication -> Onboarding -> Goal Collection
 // Clean flow: Auth -> Onboarding -> Goals
 
+import { AuthScreen } from '@/components/auth/AuthScreen';
+import { GoalCollectionScreen } from '@/components/goals/GoalCollectionScreen';
+import { FormOnboarding } from '@/components/onboarding/FormOnboarding';
+import { SettingsScreen } from '@/components/settings/SettingsScreen';
+import { useTheme } from '@/contexts/ThemeContext';
+import authService, { AuthUser } from '@/services/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { AuthScreen } from '../../components/auth/AuthScreen';
-import { GoalCollectionScreen } from '../../components/goals/GoalCollectionScreen';
-import { FormOnboarding } from '../../components/onboarding/FormOnboarding';
-import authService, { AuthUser } from '../../services/authService';
+import { Text, View } from 'react-native';
 
 export default function HomeScreen() {
+  const { theme } = useTheme();
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showGoalCollection, setShowGoalCollection] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [userName, setUserName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     checkAppState();
   }, []);
+
+  // Debug showSettings state changes
+  useEffect(() => {
+    console.log('🔧 showSettings state changed to:', showSettings);
+  }, [showSettings]);
 
   const checkAppState = async () => {
     try {
@@ -39,20 +49,28 @@ export default function HomeScreen() {
       const goalsCompleted = await AsyncStorage.getItem('@nudge_goals_completed');
       const storedName = await AsyncStorage.getItem('@nudge_user_name');
       
-      if (completed === 'true' && storedName) {
+      console.log('🔧 Onboarding check:', { completed, goalsCompleted, storedName: !!storedName });
+      
+      // STRICT: Both onboarding AND name must exist
+      if (completed === 'true' && storedName && storedName.trim() !== '') {
         setUserName(storedName);
         setShowOnboarding(false);
         
+        // Only show goals if onboarding is truly complete
         if (goalsCompleted !== 'true') {
           setShowGoalCollection(true);
         }
       } else {
-        // Show onboarding if not completed
+        // Force onboarding if ANY requirement is missing
+        console.log('🔧 FORCING ONBOARDING - requirements not met');
         setShowOnboarding(true);
+        setShowGoalCollection(false);
       }
     } catch (error) {
       console.error('Error checking onboarding status:', error);
+      // Force onboarding on any error
       setShowOnboarding(true);
+      setShowGoalCollection(false);
     }
   };
 
@@ -86,6 +104,31 @@ export default function HomeScreen() {
     }
   };
 
+  // Settings handlers
+  const handleOpenSettings = () => {
+    console.log('🔧 handleOpenSettings called');
+    console.log('🔧 Current showSettings state:', showSettings);
+    setShowSettings(true);
+    console.log('🔧 setShowSettings(true) called');
+  };
+
+  const handleCloseSettings = () => {
+    console.log('🔧 handleCloseSettings called');
+    setShowSettings(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authService.signOut();
+      setCurrentUser(null);
+      setShowOnboarding(false);
+      setShowGoalCollection(false);
+      setShowSettings(false);
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   // Reset function for development/testing
   const resetOnboarding = async () => {
     try {
@@ -102,21 +145,46 @@ export default function HomeScreen() {
     return null; // Or a loading spinner
   }
 
+  // Debug current state
+  console.log('🔧 Render state:', { 
+    currentUser: !!currentUser, 
+    showOnboarding, 
+    showGoalCollection, 
+    showSettings 
+  });
+
   // Authentication flow - show auth screen if not authenticated
   if (!currentUser) {
     return <AuthScreen onAuthSuccess={handleAuthSuccess} />;
   }
 
-  // Onboarding flow - show if authenticated but not onboarded
-  if (showOnboarding) {
+  // Settings screen - highest priority overlay
+  if (showSettings) {
+    console.log('🔧 Rendering SettingsScreen...');
+    try {
+      return <SettingsScreen />;
+    } catch (error) {
+      console.error('🔧 Error rendering SettingsScreen:', error);
+      // Fallback to simple view
+      return (
+        <View style={{ flex: 1, backgroundColor: 'red', justifyContent: 'center', alignItems: 'center' }}>
+          <Text>Settings Screen Error</Text>
+        </View>
+      );
+    }
+  }
+
+  // STRICT ONBOARDING ENFORCEMENT - No access to any other screens until onboarding is complete
+  if (showOnboarding || !userName) {
+    console.log('🔧 Showing onboarding - STRICT enforcement');
     return <FormOnboarding onComplete={handleOnboardingComplete} />;
   }
 
-  // Goal collection flow - show if onboarded but goals not set
+  // Goal collection flow - ONLY show if onboarding is complete
   if (showGoalCollection) {
-    return <GoalCollectionScreen onComplete={handleGoalsComplete} />;
+    return <GoalCollectionScreen onComplete={handleGoalsComplete} onOpenSettings={handleOpenSettings} />;
   }
 
-  // Main app content - show goal collection as main screen for now
-  return <GoalCollectionScreen onComplete={handleGoalsComplete} />;
+  // Main app content - ONLY accessible after onboarding
+  return <GoalCollectionScreen onComplete={handleGoalsComplete} onOpenSettings={handleOpenSettings} />;
 }

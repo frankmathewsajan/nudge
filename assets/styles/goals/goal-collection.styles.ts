@@ -312,11 +312,10 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
   },
 
   settingsButton: {
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: theme.colors.backgroundSecondary,
     width: 44,
     height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: theme.colors.textSecondary,
@@ -324,6 +323,9 @@ export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
+    // Ensure perfect centering
+    display: 'flex',
+    flexDirection: 'row',
   },
 
   headerCenter: {
