@@ -1,5 +1,5 @@
 /**
- * GoalPlanningStyles - Claude-inspired goal planning interface
+ * Planning Styles - Claude-inspired goal planning interface
  * 
  * Clean, professional styling for goal breakdown and planning screen.
  * Follows Claude's design principles with clear typography and spacing.
@@ -8,7 +8,7 @@
 import { Platform, StyleSheet } from 'react-native';
 import { Theme } from '../../../contexts/ThemeContext';
 
-export const createGoalPlanningStyles = (theme: Theme) => StyleSheet.create({
+export const createPlanningStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

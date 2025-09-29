@@ -375,19 +375,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
           'A verification email has been sent to your email address. Please verify your email to complete registration.',
           [{ text: 'OK' }]
         );
-        
-        console.log('✅ Email sign-up successful:', user.email);
       } else {
         const user = await authService.signInWithEmail(email.trim(), password);
-        console.log('✅ Email sign-in successful:', user.email);
         onAuthSuccess(user);
       }
     } catch (error: any) {
       console.error('❌ Email authentication failed:', error);
-      console.log('🔍 Error details:');
-      console.log('  - error.code:', error.code);
-      console.log('  - error.message:', error.message);
-      console.log('  - error type:', typeof error);
       
       // The authService already processes Firebase errors and throws user-friendly messages
       // So we should use the processed message directly if it's user-friendly
@@ -454,8 +447,6 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
         }
       }
       
-      console.log('📱 Final error message for toast:', errorMessage);
-      
       // Show toast error with animation
       setToastError(errorMessage);
       setShowToast(true);
@@ -498,7 +489,10 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
   };
 
   const toggleAuthMode = () => {
-    setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+    console.log('Toggle auth mode called, current mode:', authMode);
+    const newMode = authMode === 'signin' ? 'signup' : 'signin';
+    console.log('Switching to mode:', newMode);
+    setAuthMode(newMode);
     setEmail('');
     setPassword('');
     setConfirmPassword('');

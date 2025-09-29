@@ -9,19 +9,19 @@ import { MaterialIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  Animated,
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    Animated,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createGoalCollectionStyles } from '../../assets/styles/goals/goal-collection.styles';
+import { createCollectionStyles } from '../../assets/styles/goals/collection.styles';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGoalCollection } from '../../hooks/goals/useGoalCollection';
 import { useKeyboardAware } from '../../hooks/goals/useKeyboardAware';
@@ -127,7 +127,7 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   onOpenSettings
 }) => {
   const { theme, toggleTheme } = useTheme();
-  const styles = createGoalCollectionStyles(theme);
+  const styles = createCollectionStyles(theme);
   const insets = useSafeAreaInsets();
   const keyboard = useKeyboardAware();
   

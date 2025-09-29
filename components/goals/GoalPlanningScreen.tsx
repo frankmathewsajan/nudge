@@ -8,16 +8,16 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createGoalPlanningStyles } from '../../assets/styles/goals/goal-planning.styles';
+import { createPlanningStyles } from '../../assets/styles/goals/planning.styles';
 import { useTheme } from '../../contexts/ThemeContext';
 import { GoalAnalysisResponse } from '../../services/geminiService';
 import AnimatedBackground from '../ui/AnimatedBackground';
@@ -77,7 +77,7 @@ export const GoalPlanningScreen: React.FC<GoalPlanningScreenProps> = ({
   onRetry
 }) => {
   const { theme, toggleTheme } = useTheme();
-  const styles = createGoalPlanningStyles(theme);
+  const styles = createPlanningStyles(theme);
   const insets = useSafeAreaInsets();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
 

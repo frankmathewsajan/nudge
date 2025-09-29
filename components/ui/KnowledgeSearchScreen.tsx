@@ -1,7 +1,7 @@
 // Knowledge Search Screen - Material You design
 // Clean, minimal, knowledge-centric interface
 
-import styles from '@/assets/styles/knowledge-search.styles';
+import styles from '@/assets/styles/search.styles';
 import {
     CameraIcon,
     ExploreIcon,

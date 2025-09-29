@@ -43,7 +43,7 @@ export const DangerZone: React.FC<DangerZoneProps> = ({ theme }) => {
                     text: 'OK',
                     onPress: () => {
                       // Navigate back to main screen after clearing data
-                      router.replace('/(tabs)');
+                      router.replace('/(tabs)' as any);
                     },
                   },
                 ]

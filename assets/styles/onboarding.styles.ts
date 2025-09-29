@@ -1,10 +1,10 @@
-// Dynamic Form Onboarding Styles - Theme-aware styling
+// Onboarding Styles - Theme-aware styling
 // Uses theme context to provide light/dark theme support
 
 import { StyleSheet } from 'react-native';
 import { Theme } from '../../contexts/ThemeContext';
 
-export const createFormOnboardingStyles = (theme: Theme) => StyleSheet.create({
+export const createOnboardingStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,

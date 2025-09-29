@@ -8,7 +8,7 @@
 import React from 'react';
 import { SafeAreaView, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createFormOnboardingStyles } from '../../assets/styles/form-onboarding-dynamic.styles';
+import { createOnboardingStyles } from '../../assets/styles/onboarding.styles';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useOnboardingAnimationController } from '../../hooks/onboarding/useOnboardingAnimationController';
 import { useOnboardingFormController } from '../../hooks/onboarding/useOnboardingFormController';
@@ -30,7 +30,7 @@ interface FormOnboardingProps {
  */
 export const FormOnboarding: React.FC<FormOnboardingProps> = ({ onComplete }) => {
   const { theme, toggleTheme } = useTheme();
-  const styles = createFormOnboardingStyles(theme);
+  const styles = createOnboardingStyles(theme);
   const insets = useSafeAreaInsets();
 
   // Separated business logic via specialized hooks

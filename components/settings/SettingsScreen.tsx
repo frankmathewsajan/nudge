@@ -73,7 +73,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
       <View style={[styles.header, { marginTop: 8 }]}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={onClose || (() => console.log('No close handler provided'))}
+          onPress={onClose || (() => {})}
         >
           <MaterialIcons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>

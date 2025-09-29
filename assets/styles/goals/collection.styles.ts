@@ -1,5 +1,5 @@
 /**
- * GoalCollectionStyles - Theme-aware styling for goal collection
+ * Collection Styles - Theme-aware styling for goal collection
  * 
  * Matches onboarding aesthetic with clean, minimal design.
  * Inspired by Claude's clean interface with focus on content.
@@ -8,7 +8,7 @@
 import { Platform, StyleSheet } from 'react-native';
 import { Theme } from '../../../contexts/ThemeContext';
 
-export const createGoalCollectionStyles = (theme: Theme) => StyleSheet.create({
+export const createCollectionStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
