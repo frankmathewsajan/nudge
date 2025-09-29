@@ -5,19 +5,16 @@
  */
 
 import { MaterialIcons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-  Alert,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import authService from '../../services/authService';
 import { AboutAndContact } from './AboutAndContact';
@@ -25,8 +22,13 @@ import { AccountManagement } from './AccountManagement';
 import { DangerZone } from './DangerZone';
 import { DeveloperOptions } from './DeveloperOptions';
 
-export const SettingsScreen: React.FC = () => {
+interface SettingsScreenProps {
+  onClose?: () => void;
+}
+
+export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const { theme, toggleTheme } = useTheme();
+  const insets = useSafeAreaInsets();
   const [isDarkMode, setIsDarkMode] = useState(theme.name === 'dark');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [userEmail, setUserEmail] = useState<string>('');
@@ -66,12 +68,12 @@ export const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header with proper SafeArea spacing */}
+      <View style={[styles.header, { marginTop: 8 }]}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={onClose || (() => console.log('No close handler provided'))}
         >
           <MaterialIcons name="arrow-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
@@ -137,7 +139,7 @@ export const SettingsScreen: React.FC = () => {
         )}
 
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -6,16 +6,16 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
-  Alert,
-  Animated,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Alert,
+    Animated,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -166,6 +166,51 @@ const createAuthStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: 4,
   },
 
+  errorToast: {
+    position: 'absolute',
+    top: 60, // Below the header
+    left: 20,
+    right: 20,
+    backgroundColor: theme.colors.error || '#FF5252',
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    zIndex: 1000,
+  },
+
+  errorToastText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: '500',
+    flex: 1,
+    lineHeight: 20,
+  },
+
+  dismissButton: {
+    marginLeft: 12,
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    minWidth: 24,
+    minHeight: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  dismissText: {
+    fontSize: 14,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    lineHeight: 16,
+  },
+
   verificationContainer: {
     alignItems: 'center',
     gap: 16,
@@ -225,6 +270,12 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
   const [passwordError, setPasswordError] = useState('');
   const [confirmPasswordError, setConfirmPasswordError] = useState('');
   const [emailVerificationSent, setEmailVerificationSent] = useState(false);
+  const [toastError, setToastError] = useState('');
+  const [showToast, setShowToast] = useState(false);
+  
+  // Animation refs
+  const toastOpacity = useRef(new Animated.Value(0)).current;
+  const toastTranslateY = useRef(new Animated.Value(-100)).current;
 
   useEffect(() => {
     const checkAuthState = async () => {
@@ -333,19 +384,114 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
       }
     } catch (error: any) {
       console.error('❌ Email authentication failed:', error);
+      console.log('🔍 Error details:');
+      console.log('  - error.code:', error.code);
+      console.log('  - error.message:', error.message);
+      console.log('  - error type:', typeof error);
       
-      let errorMessage = 'Authentication failed. Please try again.';
-      if (error.message.includes('email-already-in-use')) {
-        errorMessage = 'This email is already registered. Try signing in instead.';
-      } else if (error.message.includes('weak-password')) {
-        errorMessage = 'Password should be at least 6 characters long.';
-      } else if (error.message.includes('invalid-email')) {
-        errorMessage = 'Please enter a valid email address.';
-      } else if (error.message.includes('user-not-found') || error.message.includes('wrong-password')) {
-        errorMessage = 'Invalid email or password. Please try again.';
+      // The authService already processes Firebase errors and throws user-friendly messages
+      // So we should use the processed message directly if it's user-friendly
+      let errorMessage = error.message || 'Authentication failed. Please try again.';
+      
+      // Check if the message is already user-friendly (from authService)
+      const userFriendlyMessages = [
+        'This email is already registered. Try signing in instead.',
+        'Password should be at least 6 characters long.',
+        'Please enter a valid email address.',
+        'Too many requests. Please wait a few minutes before trying again.',
+        'Email authentication is not enabled in Firebase Console.',
+        'No account found with this email.',
+        'Incorrect password.',
+        'This account has been disabled.',
+        'Network error. Please check your connection and try again.'
+      ];
+      
+      const isUserFriendly = userFriendlyMessages.some(msg => errorMessage.includes(msg.split('.')[0]));
+      
+      if (isUserFriendly) {
+        // Use the message from authService directly, just add an icon
+        if (errorMessage.includes('email is already registered')) {
+          errorMessage = '📧 ' + errorMessage;
+        } else if (errorMessage.includes('Password should be')) {
+          errorMessage = '� ' + errorMessage;
+        } else if (errorMessage.includes('valid email address')) {
+          errorMessage = '✉️ ' + errorMessage;
+        } else if (errorMessage.includes('Too many requests')) {
+          errorMessage = '⏰ ' + errorMessage;
+        } else if (errorMessage.includes('authentication is not enabled')) {
+          errorMessage = '⚙️ ' + errorMessage;
+        } else if (errorMessage.includes('No account found')) {
+          errorMessage = '❓ ' + errorMessage;
+        } else if (errorMessage.includes('Incorrect password')) {
+          errorMessage = '🔑 ' + errorMessage;
+        } else if (errorMessage.includes('account has been disabled')) {
+          errorMessage = '🚫 ' + errorMessage;
+        } else if (errorMessage.includes('Network error')) {
+          errorMessage = '🌐 ' + errorMessage;
+        }
+      } else {
+        // Fallback to Firebase error code detection for any edge cases
+        const errorCode = error.code || '';
+        const fullErrorString = JSON.stringify(error).toLowerCase();
+        
+        if (errorCode === 'auth/email-already-in-use' || 
+            fullErrorString.includes('email-already-in-use')) {
+          errorMessage = '� This email is already registered. Try signing in instead.';
+        } else if (errorCode === 'auth/weak-password' || 
+                   fullErrorString.includes('weak-password')) {
+          errorMessage = '🔒 Password should be at least 6 characters long.';
+        } else if (errorCode === 'auth/invalid-email' || 
+                   fullErrorString.includes('invalid-email')) {
+          errorMessage = '✉️ Please enter a valid email address.';
+        } else if (errorCode === 'auth/user-not-found' || 
+                   fullErrorString.includes('user-not-found')) {
+          errorMessage = '❓ No account found with this email. Please sign up first.';
+        } else if (errorCode === 'auth/wrong-password' || 
+                   fullErrorString.includes('wrong-password')) {
+          errorMessage = '🔑 Incorrect password. Please try again.';
+        } else {
+          errorMessage = '⚠️ ' + errorMessage;
+        }
       }
       
-      Alert.alert('Authentication Failed', errorMessage, [{ text: 'OK' }]);
+      console.log('📱 Final error message for toast:', errorMessage);
+      
+      // Show toast error with animation
+      setToastError(errorMessage);
+      setShowToast(true);
+      
+      // Animate toast in
+      Animated.parallel([
+        Animated.timing(toastOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.timing(toastTranslateY, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      
+      // Clear error after 8 seconds with animation
+      setTimeout(() => {
+        Animated.parallel([
+          Animated.timing(toastOpacity, {
+            toValue: 0,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+          Animated.timing(toastTranslateY, {
+            toValue: -100,
+            duration: 250,
+            useNativeDriver: true,
+          }),
+        ]).start(() => {
+          setShowToast(false);
+          setToastError('');
+        });
+      }, 8000);
     } finally {
       setIsLoading(false);
     }
@@ -399,6 +545,41 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
           <Text style={styles.subtitle}>Your personal productivity companion</Text>
         </Animated.View>
         
+        {/* Error Toast with Animation */}
+        {showToast && toastError ? (
+          <Animated.View style={[
+            styles.errorToast, 
+            { 
+              opacity: toastOpacity,
+              transform: [{ translateY: toastTranslateY }]
+            }
+          ]}>
+            <Text style={styles.errorToastText}>{toastError}</Text>
+            <TouchableOpacity 
+              style={styles.dismissButton}
+              onPress={() => {
+                Animated.parallel([
+                  Animated.timing(toastOpacity, {
+                    toValue: 0,
+                    duration: 250,
+                    useNativeDriver: true,
+                  }),
+                  Animated.timing(toastTranslateY, {
+                    toValue: -100,
+                    duration: 250,
+                    useNativeDriver: true,
+                  }),
+                ]).start(() => {
+                  setShowToast(false);
+                  setToastError('');
+                });
+              }}
+            >
+              <Text style={styles.dismissText}>✕</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        ) : null}
+        
         <Animated.View style={[styles.formContainer, { opacity: formOpacity }]}>
           {emailVerificationSent ? (
             <View style={styles.verificationContainer}>
@@ -428,7 +609,27 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
                 placeholder="Email address"
                 placeholderTextColor={theme.colors.inputPlaceholder || theme.colors.textTertiary}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(text) => {
+                  setEmail(text);
+                  if (showToast) {
+                    // Animate toast out when user starts typing
+                    Animated.parallel([
+                      Animated.timing(toastOpacity, {
+                        toValue: 0,
+                        duration: 250,
+                        useNativeDriver: true,
+                      }),
+                      Animated.timing(toastTranslateY, {
+                        toValue: -100,
+                        duration: 250,
+                        useNativeDriver: true,
+                      }),
+                    ]).start(() => {
+                      setShowToast(false);
+                      setToastError('');
+                    });
+                  }
+                }}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -449,6 +650,24 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
+                    if (showToast) {
+                      // Animate toast out when user starts typing
+                      Animated.parallel([
+                        Animated.timing(toastOpacity, {
+                          toValue: 0,
+                          duration: 250,
+                          useNativeDriver: true,
+                        }),
+                        Animated.timing(toastTranslateY, {
+                          toValue: -100,
+                          duration: 250,
+                          useNativeDriver: true,
+                        }),
+                      ]).start(() => {
+                        setShowToast(false);
+                        setToastError('');
+                      });
+                    }
                     if (authMode === 'signup') {
                       setTimeout(() => validatePasswords(), 100);
                     }

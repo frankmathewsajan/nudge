@@ -9,7 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import authService, { AuthUser } from '@/services/authService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 export default function HomeScreen() {
   const { theme } = useTheme();
@@ -49,26 +49,46 @@ export default function HomeScreen() {
       const goalsCompleted = await AsyncStorage.getItem('@nudge_goals_completed');
       const storedName = await AsyncStorage.getItem('@nudge_user_name');
       
-      console.log('🔧 Onboarding check:', { completed, goalsCompleted, storedName: !!storedName });
+      console.log('🔧 DETAILED STATE CHECK:');
+      console.log('  - completed:', completed, '(type:', typeof completed, ')');
+      console.log('  - goalsCompleted:', goalsCompleted, '(type:', typeof goalsCompleted, ')');
+      console.log('  - storedName:', storedName, '(exists:', !!storedName, ')');
+      console.log('  - user:', user?.email);
       
-      // STRICT: Both onboarding AND name must exist
-      if (completed === 'true' && storedName && storedName.trim() !== '') {
-        setUserName(storedName);
-        setShowOnboarding(false);
-        
-        // Only show goals if onboarding is truly complete
-        if (goalsCompleted !== 'true') {
-          setShowGoalCollection(true);
-        }
-      } else {
-        // Force onboarding if ANY requirement is missing
-        console.log('🔧 FORCING ONBOARDING - requirements not met');
+      // ULTRA STRICT ENFORCEMENT: ALWAYS force onboarding first, THEN goals, THEN main app
+      // This ensures NO bypassing is possible
+      
+      // Step 1: FORCE onboarding if not BOTH completed AND has name
+      // Even if marked complete, if name is missing, force onboarding
+      if (completed !== 'true' || !storedName || storedName.trim() === '') {
+        console.log('🔧 🚫 FORCING STEP 1: Onboarding REQUIRED (ultra strict mode)');
+        console.log('  - completed=' + completed + ', storedName=' + (storedName || 'missing'));
         setShowOnboarding(true);
         setShowGoalCollection(false);
+        setUserName('');
+        return;
       }
+      
+      // Step 2: Only after onboarding is 100% complete, check goals
+      if (goalsCompleted !== 'true') {
+        console.log('🔧 🚫 FORCING STEP 2: Goals REQUIRED (onboarding verified complete)');
+        console.log('  - goalsCompleted=' + goalsCompleted);
+        setUserName(storedName);
+        setShowOnboarding(false);
+        setShowGoalCollection(true);
+        return;
+      }
+      
+      // Step 3: Everything is complete - show main app
+      console.log('🔧 ✅ All steps complete - showing main app');
+      setUserName(storedName);
+      setShowOnboarding(false);
+      setShowGoalCollection(false);
+      
     } catch (error) {
       console.error('Error checking onboarding status:', error);
       // Force onboarding on any error
+      console.log('🔧 ERROR: Forcing onboarding due to error');
       setShowOnboarding(true);
       setShowGoalCollection(false);
     }
@@ -129,13 +149,23 @@ export default function HomeScreen() {
     }
   };
 
-  // Reset function for development/testing
+  // Enhanced reset function for development/testing
   const resetOnboarding = async () => {
     try {
-      await AsyncStorage.setItem('@nudge_onboarding_completed', 'false');
-      await AsyncStorage.setItem('@nudge_goals_completed', 'false');
+      console.log('🔄 FORCE RESET: Clearing all onboarding and goal data');
+      await AsyncStorage.multiRemove([
+        '@nudge_onboarding_completed',
+        '@nudge_goals_completed', 
+        '@nudge_user_name'
+      ]);
+      
+      // Force UI state reset
       setShowOnboarding(true);
       setShowGoalCollection(false);
+      setShowSettings(false);
+      setUserName('');
+      
+      console.log('🔄 FORCE RESET: Complete - will show onboarding');
     } catch (error) {
       console.error('Error resetting onboarding:', error);
     }
@@ -150,7 +180,8 @@ export default function HomeScreen() {
     currentUser: !!currentUser, 
     showOnboarding, 
     showGoalCollection, 
-    showSettings 
+    showSettings,
+    userName: !!userName 
   });
 
   // Authentication flow - show auth screen if not authenticated
@@ -162,7 +193,7 @@ export default function HomeScreen() {
   if (showSettings) {
     console.log('🔧 Rendering SettingsScreen...');
     try {
-      return <SettingsScreen />;
+      return <SettingsScreen onClose={handleCloseSettings} />;
     } catch (error) {
       console.error('🔧 Error rendering SettingsScreen:', error);
       // Fallback to simple view
@@ -174,17 +205,52 @@ export default function HomeScreen() {
     }
   }
 
-  // STRICT ONBOARDING ENFORCEMENT - No access to any other screens until onboarding is complete
+  // STEP 1: STRICT ONBOARDING ENFORCEMENT - No access to any other screens until onboarding is complete
   if (showOnboarding || !userName) {
     console.log('🔧 Showing onboarding - STRICT enforcement');
     return <FormOnboarding onComplete={handleOnboardingComplete} />;
   }
 
-  // Goal collection flow - ONLY show if onboarding is complete
+  // STEP 2: Goal collection flow - ONLY show if onboarding is complete but goals are not
   if (showGoalCollection) {
+    console.log('🔧 Showing goal collection - onboarding complete, goals pending');
     return <GoalCollectionScreen onComplete={handleGoalsComplete} onOpenSettings={handleOpenSettings} />;
   }
 
-  // Main app content - ONLY accessible after onboarding
-  return <GoalCollectionScreen onComplete={handleGoalsComplete} onOpenSettings={handleOpenSettings} />;
+  // STEP 3: Main app content - ONLY accessible after BOTH onboarding AND goals are complete
+  console.log('🔧 Showing main app - all requirements met');
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5F5' }}>
+      <Text style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 20 }}>🎉 Welcome to Nudge!</Text>
+      <Text style={{ fontSize: 16, textAlign: 'center', paddingHorizontal: 40 }}>
+        All setup complete! Main app coming soon...
+      </Text>
+      <TouchableOpacity 
+        onPress={handleOpenSettings}
+        style={{ 
+          marginTop: 30, 
+          backgroundColor: '#007AFF', 
+          paddingHorizontal: 20, 
+          paddingVertical: 10, 
+          borderRadius: 8 
+        }}
+      >
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>Settings</Text>
+      </TouchableOpacity>
+      
+      {/* Development Reset Button */}
+      <TouchableOpacity 
+        onPress={resetOnboarding}
+        style={{ 
+          marginTop: 20, 
+          backgroundColor: '#FF3B30', 
+          paddingHorizontal: 20, 
+          paddingVertical: 10, 
+          borderRadius: 8 
+        }}
+      >
+        <Text style={{ color: 'white', fontWeight: 'bold' }}>Reset for Testing</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }

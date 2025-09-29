@@ -32,26 +32,30 @@ export const AboutAndContact: React.FC<AboutAndContactProps> = ({ theme, onDevel
     {
       label: 'Portfolio',
       url: 'https://frankmathew.dev',
-      icon: 'web',
-      color: theme.colors.accentVibrant,
+      icon: 'language',
+      color: theme.name === 'dark' ? '#4FC3F7' : '#0277BD',
+      description: 'Visit website',
     },
     {
       label: 'GitHub', 
       url: 'https://github.com/frankmathewsajan',
       icon: 'code',
-      color: theme.colors.textSecondary,
+      color: theme.name === 'dark' ? '#A5A5A5' : '#333333',
+      description: 'View projects',
     },
     {
       label: 'LinkedIn',
       url: 'https://www.linkedin.com/in/frankmathewsajan/',
-      icon: 'business',
-      color: '#0077B5',
+      icon: 'business-center',
+      color: '#0A66C2',
+      description: 'Connect professionally',
     },
     {
       label: 'Instagram',
       url: 'https://www.instagram.com/frankdevelopment/',
-      icon: 'camera-alt',
-      color: '#E1306C',
+      icon: 'photo-camera',
+      color: '#E4405F',
+      description: 'Follow updates',
     },
   ];
 
@@ -114,42 +118,54 @@ export const AboutAndContact: React.FC<AboutAndContactProps> = ({ theme, onDevel
     <View style={styles.section}>
       <Text style={styles.sectionTitle}>About & Contact</Text>
       
-      {/* App Info Row */}
-      <View style={styles.infoRow}>
-        <MaterialIcons name="info-outline" size={20} color={theme.colors.accentVibrant} />
-        <View style={styles.infoContent}>
-          <Text style={styles.appName}>{appInfo.name} v{appInfo.version}</Text>
+      {/* App Info Card */}
+      <View style={styles.appCard}>
+        <View style={styles.appIconContainer}>
+          <MaterialIcons name="apps" size={32} color={theme.colors.accentVibrant} />
+        </View>
+        <View style={styles.appInfo}>
+          <Text style={styles.appName}>{appInfo.name}</Text>
+          <Text style={styles.appVersion}>Version {appInfo.version} • Build {appInfo.buildNumber}</Text>
           <Text style={styles.developmentYear}>© {appInfo.developmentYear}</Text>
         </View>
       </View>
 
       {/* Developer Info with Tap-to-Unlock */}
-      <TouchableOpacity style={styles.developerRow} onPress={handleDeveloperTap}>
-        <MaterialIcons name="person" size={20} color={theme.colors.accentVibrant} />
-        <View style={styles.developerContent}>
+      <TouchableOpacity style={styles.developerCard} onPress={handleDeveloperTap} activeOpacity={0.7}>
+        <View style={styles.developerIconContainer}>
+          <MaterialIcons name="person" size={24} color={theme.colors.accentVibrant} />
+        </View>
+        <View style={styles.developerInfo}>
           <Text style={styles.developerName}>{appInfo.developer}</Text>
           <Text style={styles.developerTitle}>Full-Stack Developer</Text>
+          <Text style={styles.tapHint}>Tap to unlock developer options</Text>
         </View>
+        <MaterialIcons name="chevron-right" size={20} color={theme.colors.textSecondary} />
       </TouchableOpacity>
 
       {/* Social Links */}
       <View style={styles.socialSection}>
-        <View style={styles.divider} />
-        <Text style={styles.socialTitle}>Connect</Text>
+        <Text style={styles.socialTitle}>Connect with Developer</Text>
         <View style={styles.socialGrid}>
           {socialLinks.map((link) => (
             <TouchableOpacity
               key={link.label}
-              style={styles.socialButton}
+              style={styles.socialCard}
               onPress={() => handleLinkPress(link.url, link.label)}
               activeOpacity={0.7}
             >
-              <MaterialIcons 
-                name={link.icon as any} 
-                size={18} 
-                color={link.color} 
-              />
-              <Text style={styles.socialLabel}>{link.label}</Text>
+              <View style={[styles.socialIconContainer, { backgroundColor: link.color + '15' }]}>
+                <MaterialIcons 
+                  name={link.icon as any} 
+                  size={20} 
+                  color={link.color} 
+                />
+              </View>
+              <View style={styles.socialInfo}>
+                <Text style={styles.socialLabel}>{link.label}</Text>
+                <Text style={styles.socialDescription}>{link.description}</Text>
+              </View>
+              <MaterialIcons name="open-in-new" size={16} color={theme.colors.textSecondary} />
             </TouchableOpacity>
           ))}
         </View>
@@ -161,113 +177,171 @@ export const AboutAndContact: React.FC<AboutAndContactProps> = ({ theme, onDevel
 const createStyles = (theme: Theme) => StyleSheet.create({
   section: {
     backgroundColor: theme.colors.backgroundSecondary,
-    borderRadius: 12,
+    borderRadius: 16,
     marginHorizontal: 20,
     marginVertical: 8,
-    padding: 16,
-    elevation: 1,
+    padding: 20,
+    elevation: 2,
     shadowColor: theme.colors.textSecondary,
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowRadius: 4,
   },
 
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: theme.colors.textPrimary,
-    marginBottom: 12,
-    letterSpacing: 0.2,
+    marginBottom: 16,
+    letterSpacing: 0.3,
   },
 
-  infoRow: {
+  // App Info Card
+  appCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
+    backgroundColor: theme.colors.background,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: theme.colors.inputBorder,
   },
 
-  infoContent: {
-    marginLeft: 12,
+  appIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.accentVibrant + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+
+  appInfo: {
     flex: 1,
   },
 
   appName: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: theme.colors.textPrimary,
+    marginBottom: 4,
+    letterSpacing: 0.2,
+  },
+
+  appVersion: {
+    fontSize: 13,
+    color: theme.colors.textSecondary,
     marginBottom: 2,
+    fontWeight: '500',
   },
 
   developmentYear: {
     fontSize: 12,
     color: theme.colors.textTertiary,
+    fontWeight: '400',
   },
 
-  developerRow: {
+  // Developer Card
+  developerCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 10,
-    borderTopWidth: 0.5,
-    borderTopColor: theme.colors.inputBorder,
-    marginTop: 8,
+    backgroundColor: theme.colors.background,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.inputBorder,
   },
 
-  developerContent: {
-    marginLeft: 12,
+  developerIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.accentVibrant + '15',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+
+  developerInfo: {
     flex: 1,
   },
 
   developerName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: theme.colors.textPrimary,
     marginBottom: 2,
+    letterSpacing: 0.1,
   },
 
   developerTitle: {
-    fontSize: 13,
+    fontSize: 14,
     color: theme.colors.textSecondary,
+    marginBottom: 2,
+    fontWeight: '500',
   },
 
+  tapHint: {
+    fontSize: 11,
+    color: theme.colors.textTertiary,
+    fontStyle: 'italic',
+  },
+
+  // Social Section
   socialSection: {
-    marginTop: 12,
-  },
-
-  divider: {
-    height: 0.5,
-    backgroundColor: theme.colors.inputBorder,
-    marginVertical: 12,
+    marginTop: 4,
   },
 
   socialTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: theme.colors.textSecondary,
-    marginBottom: 8,
+    fontSize: 15,
+    fontWeight: '600',
+    color: theme.colors.textPrimary,
+    marginBottom: 12,
+    letterSpacing: 0.1,
   },
 
   socialGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: 8,
   },
 
-  socialButton: {
+  socialCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    backgroundColor: theme.colors.inputBorder + '40',
-    borderWidth: 0.5,
+    backgroundColor: theme.colors.background,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
     borderColor: theme.colors.inputBorder,
-    minWidth: '47%',
+  },
+
+  socialIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+
+  socialInfo: {
+    flex: 1,
   },
 
   socialLabel: {
-    fontSize: 12,
+    fontSize: 14,
     color: theme.colors.textPrimary,
-    marginLeft: 6,
-    fontWeight: '500',
+    fontWeight: '600',
+    marginBottom: 2,
+    letterSpacing: 0.1,
+  },
+
+  socialDescription: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    fontWeight: '400',
   },
 });
