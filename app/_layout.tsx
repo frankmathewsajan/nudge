@@ -153,13 +153,20 @@ export default function RootLayout() {
       <ThemeProvider>
         <TamaguiProvider config={config}>
           <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="index" />
             <Stack.Screen 
               name="modal/settings" 
               options={{ 
                 presentation: 'modal',
-                headerShown: true,
-                headerTitle: 'Settings'
+                headerShown: false
+              }} 
+            />
+            <Stack.Screen 
+              name="modal/side-menu" 
+              options={{ 
+                presentation: 'modal',
+                headerShown: false,
+                animation: 'slide_from_left'
               }} 
             />
           </Stack>

@@ -1,24 +1,26 @@
 /**
  * Settings Screen Component
  * 
- * Compact settings interface with Material Design 3 styling
+ * Claude-inspired clean and minimal settings interface
+ * Calm, eye-pleasing design with perfect spacing and typography
  */
 
+import { createSettingsStyles } from '@/assets/styles/app/settings.styles';
+import { useUserData } from '@/hooks/useUserData';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
+    Alert,
     ScrollView,
-    StyleSheet,
     Switch,
     Text,
+    TouchableOpacity,
     View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import authService from '../../services/authService';
-import { AboutAndContact } from './AboutAndContact';
-import { AccountManagement } from './AccountManagement';
-import { DangerZone } from './DangerZone';
-import { DeveloperOptions } from './DeveloperOptions';
+import AnimatedBackground from '../ui/AnimatedBackground';
 
 interface SettingsScreenProps {
   onClose?: () => void;
@@ -26,165 +28,266 @@ interface SettingsScreenProps {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const { theme, toggleTheme } = useTheme();
-  const [isDarkMode, setIsDarkMode] = useState(theme.name === 'dark');
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { userName } = useUserData();
   const [userEmail, setUserEmail] = useState<string>('');
-  const [geminiApiKey, setGeminiApiKey] = useState<string>('');
-  const [showDeveloperOptions, setShowDeveloperOptions] = useState(false);
+  const [hapticEnabled, setHapticEnabled] = useState(true);
 
-  const styles = createStyles(theme);
+  const styles = createSettingsStyles(theme);
 
   useEffect(() => {
-    setIsDarkMode(theme.name === 'dark');
-    
-    // Get current user email and load settings
+    // Get current user email
     const loadUserData = async () => {
       try {
         const user = await authService.getCurrentUser();
         if (user?.email) {
           setUserEmail(user.email);
         }
-
-        // Load saved API key (in a real app, this would be encrypted)
-        // For now, we'll just keep it in state
       } catch (error) {
-        console.error('Error getting user data:', error);
+        console.error('Error loading user data:', error);
       }
     };
-    
-    loadUserData();
-  }, [theme.name]);
 
-  const handleThemeToggle = (value: boolean) => {
-    setIsDarkMode(value);
+    loadUserData();
+  }, []);
+
+  const handleBack = () => {
+    if (onClose) onClose();
+  };
+
+  const handleProfile = () => {
+    // TODO: Navigate to profile screen
+  };
+
+  const handleBilling = () => {
+    // TODO: Navigate to billing screen
+  };
+
+  const handleCapabilities = () => {
+    // TODO: Navigate to capabilities screen
+  };
+
+  const handlePermissions = () => {
+    // TODO: Navigate to permissions screen
+  };
+
+  const handleColorMode = () => {
     toggleTheme();
   };
 
-  const handleDeveloperUnlock = () => {
-    setShowDeveloperOptions(true);
+  const handleFontStyle = () => {
+    // TODO: Navigate to font settings
   };
 
-  return (
-    <View style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+  const handleSpeechLanguage = () => {
+    // TODO: Navigate to language settings
+  };
 
-        {/* 1. Account Management - Enhanced with profile details */}
-        <AccountManagement 
-          theme={theme}
-          userEmail={userEmail}
+  const handlePrivacy = () => {
+    // TODO: Navigate to privacy settings
+  };
+
+  const handleSharedLinks = () => {
+    // TODO: Navigate to shared links
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Log out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await authService.signOut();
+              if (onClose) onClose();
+            } catch (error) {
+              console.error('Logout error:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const SettingRow = ({ 
+    icon, 
+    title, 
+    subtitle, 
+    onPress, 
+    showArrow = true, 
+    destructive = false,
+    rightElement = null 
+  }: {
+    icon: string;
+    title: string;
+    subtitle?: string;
+    onPress: () => void;
+    showArrow?: boolean;
+    destructive?: boolean;
+    rightElement?: React.ReactNode;
+  }) => (
+    <TouchableOpacity 
+      style={[styles.settingRow, destructive && styles.destructiveRow]} 
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      <View style={styles.settingIcon}>
+        <MaterialIcons 
+          name={icon as any} 
+          size={22} 
+          color={destructive ? styles.destructiveIcon.color : theme.colors.textPrimary} 
         />
+      </View>
+      <View style={styles.settingContent}>
+        <Text style={[styles.settingTitle, destructive && styles.destructiveText]}>
+          {title}
+        </Text>
+        {subtitle && (
+          <Text style={styles.settingSubtitle}>{subtitle}</Text>
+        )}
+      </View>
+      {rightElement || (showArrow && (
+        <MaterialIcons 
+          name="chevron-right" 
+          size={20} 
+          color={theme.colors.textTertiary}
+          style={styles.settingArrow}
+        />
+      ))}
+    </TouchableOpacity>
+  );
 
-        {/* 2. Preferences - Theme and Notifications only */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Preferences</Text>
-          
-          <View style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <MaterialIcons name="dark-mode" size={20} color={theme.colors.accentVibrant} />
-              <Text style={styles.settingLabel}>Dark Mode</Text>
-            </View>
-            <Switch
-              value={isDarkMode}
-              onValueChange={handleThemeToggle}
-              trackColor={{ false: theme.colors.inputBorder, true: theme.colors.accentVibrant }}
-              thumbColor={isDarkMode ? '#fff' : theme.colors.backgroundSecondary}
-            />
-          </View>
+  return (
+    <SafeAreaView style={styles.container}>
+      {/* Animated Background */}
+      <AnimatedBackground intensity="subtle" />
+      
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={handleBack}>
+          <MaterialIcons name="arrow-back" size={24} color={theme.colors.textPrimary} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Settings</Text>
+      </View>
 
-          <View style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <MaterialIcons name="notifications" size={20} color={theme.colors.accentVibrant} />
-              <Text style={styles.settingLabel}>Notifications</Text>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {/* User Profile Section */}
+        <View style={styles.userSection}>
+          <View style={styles.userInfo}>
+            <View style={styles.userAvatar}>
+              <Text style={styles.userInitial}>
+                {userName ? userName.charAt(0).toUpperCase() : 'U'}
+              </Text>
             </View>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: theme.colors.inputBorder, true: theme.colors.accentVibrant }}
-              thumbColor={notificationsEnabled ? '#fff' : theme.colors.backgroundSecondary}
-            />
+            <View style={styles.userDetails}>
+              <Text style={styles.userName}>{userName || 'User'}</Text>
+              <Text style={styles.userEmail}>{userEmail || 'No email'}</Text>
+            </View>
           </View>
         </View>
 
-        {/* 3. Danger Zone - Compact, positioned before About */}
-        <DangerZone theme={theme} />
-
-        {/* 4. About & Contact - Merged component with social links */}
-        <AboutAndContact 
-          theme={theme} 
-          onDeveloperUnlock={handleDeveloperUnlock}
+        {/* Main Settings */}
+        <SettingRow
+          icon="person-outline"
+          title="Profile"
+          onPress={handleProfile}
         />
 
-        {/* Developer Options - Hidden until unlocked via 7-tap gesture on About */}
-        {showDeveloperOptions && (
-          <DeveloperOptions 
-            theme={theme}
-            geminiApiKey={geminiApiKey}
-            onGeminiApiKeyChange={setGeminiApiKey}
-          />
-        )}
+        <SettingRow
+          icon="credit-card"
+          title="Billing"
+          onPress={handleBilling}
+        />
 
+        <View style={styles.spacerMedium} />
+
+        <SettingRow
+          icon="tune"
+          title="Capabilities"
+          subtitle="2 enabled"
+          onPress={handleCapabilities}
+        />
+
+        <SettingRow
+          icon="security"
+          title="Permissions"
+          onPress={handlePermissions}
+        />
+
+        <View style={styles.spacerMedium} />
+
+        <SettingRow
+          icon="dark-mode"
+          title="Color mode"
+          subtitle={theme.name === 'dark' ? 'Dark' : 'Light'}
+          onPress={handleColorMode}
+        />
+
+        <SettingRow
+          icon="font-download"
+          title="Font style"
+          subtitle="Default"
+          onPress={handleFontStyle}
+        />
+
+        <SettingRow
+          icon="language"
+          title="Speech language"
+          subtitle="English"
+          onPress={handleSpeechLanguage}
+        />
+
+        <View style={styles.spacerMedium} />
+
+        <SettingRow
+          icon="vibration"
+          title="Haptic feedback"
+          onPress={() => setHapticEnabled(!hapticEnabled)}
+          showArrow={false}
+          rightElement={
+            <Switch
+              value={hapticEnabled}
+              onValueChange={setHapticEnabled}
+              trackColor={{ 
+                false: theme.colors.backgroundTertiary, 
+                true: theme.colors.accent 
+              }}
+              thumbColor={hapticEnabled ? '#FFFFFF' : theme.colors.backgroundSecondary}
+            />
+          }
+        />
+
+        <SettingRow
+          icon="privacy-tip"
+          title="Privacy"
+          onPress={handlePrivacy}
+        />
+
+        <SettingRow
+          icon="link"
+          title="Shared links"
+          onPress={handleSharedLinks}
+        />
+
+        <View style={styles.spacerLarge} />
+
+        {/* Logout */}
+        <SettingRow
+          icon="logout"
+          title="Log out"
+          onPress={handleLogout}
+          showArrow={false}
+          destructive={true}
+        />
+
+        <View style={styles.spacerLarge} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
-
-const createStyles = (theme: any) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-
-  scrollView: {
-    flex: 1,
-  },
-
-  card: {
-    backgroundColor: theme.colors.backgroundSecondary,
-    borderRadius: 12,
-    marginHorizontal: 20,
-    marginVertical: 16,
-    padding: 16,
-    elevation: 1,
-    shadowColor: theme.colors.textSecondary,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
-    marginBottom: 16,
-    letterSpacing: 0.2,
-  },
-
-  settingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    borderBottomWidth: 0.5,
-    borderBottomColor: theme.colors.inputBorder,
-  },
-
-
-
-  settingLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-
-  settingLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: theme.colors.textPrimary,
-    marginLeft: 12,
-    letterSpacing: 0.1,
-  },
-
-
-});
-
-export default SettingsScreen;

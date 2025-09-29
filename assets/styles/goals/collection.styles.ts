@@ -11,7 +11,7 @@ import { Theme } from '../../../contexts/ThemeContext';
 export const createCollectionStyles = (theme: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: 'transparent', // Transparent to show animated background
     position: 'relative',
   },
 
@@ -311,21 +311,22 @@ export const createCollectionStyles = (theme: Theme) => StyleSheet.create({
     marginTop: 8,
   },
 
-  settingsButton: {
+  menuButton: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.backgroundSecondary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: theme.colors.textSecondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    // Remove background, shadow and elevation for seamless integration
     // Ensure perfect centering
     display: 'flex',
     flexDirection: 'row',
+  },
+
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: '500', // Changed from 700 to 500 for Material Design 3
+    color: theme.colors.textPrimary,
+    letterSpacing: -0.5,
   },
 
   headerCenter: {

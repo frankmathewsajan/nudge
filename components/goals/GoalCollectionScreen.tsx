@@ -5,6 +5,7 @@
  * Matches onboarding aesthetic with seamless keyboard handling.
  */
 
+import { CustomMenuIcon } from '@/components/ui/CustomMenuIcon';
 import { MaterialIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
@@ -32,7 +33,6 @@ import { GoalAnalysisResponse as V2GoalAnalysisResponse } from '../../utils/gemi
 import AnimatedBackground from '../ui/AnimatedBackground';
 import { TerminalLoader } from '../ui/TerminalLoader';
 import { ThemeToggle } from '../ui/ThemeToggle';
-import { GoalHistoryTab } from './GoalHistoryTab';
 import { GoalPlanningScreen } from './GoalPlanningScreen';
 
 /**
@@ -110,7 +110,7 @@ const createSimpleGoalSummary = (goalText: string): string => {
 
 interface GoalCollectionScreenProps {
   onComplete?: (goals: any[]) => void;
-  onOpenSettings?: () => void;
+  onOpenSideMenu?: () => void;
 }
 
 /**
@@ -124,7 +124,7 @@ interface GoalCollectionScreenProps {
  */
 export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
   onComplete,
-  onOpenSettings
+  onOpenSideMenu
 }) => {
   const { theme, toggleTheme } = useTheme();
   const styles = createCollectionStyles(theme);
@@ -640,73 +640,32 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
       {/* Animated Background */}
       <AnimatedBackground intensity="subtle" />
       
-      {/* Header with Centered Tabs and Controls */}
+      {/* Header with Menu Button */}
       <View style={styles.headerRow}>
-        {/* Settings Button */}
+        {/* Menu Button */}
         <TouchableOpacity
-          style={styles.settingsButton}
+          style={styles.menuButton}
           onPress={() => {
-            if (onOpenSettings) {
-              onOpenSettings();
+            if (onOpenSideMenu) {
+              onOpenSideMenu();
             }
           }}
           activeOpacity={0.7}
         >
-          <MaterialIcons 
-            name="settings" 
-            size={22} 
+          <CustomMenuIcon 
+            size={24} 
             color={theme.colors.textPrimary} 
           />
         </TouchableOpacity>
         
         <View style={styles.headerCenter}>
-          <View style={styles.compactTabContainer}>
-            <TouchableOpacity
-              style={[styles.compactTab, activeTab === 'create' && styles.activeCompactTab]}
-              onPress={() => handleTabChange('create')}
-            >
-              <MaterialIcons 
-                name="add-circle-outline" 
-                size={16} 
-                color={activeTab === 'create' ? (theme.name === 'dark' ? '#0F172A' : '#FFFFFF') : theme.colors.textSecondary} 
-              />
-              <Text style={[
-                styles.compactTabText,
-                activeTab === 'create' && styles.activeCompactTabText
-              ]}>
-                Create
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.compactTab, activeTab === 'history' && styles.activeCompactTab]}
-              onPress={() => handleTabChange('history')}
-            >
-              <MaterialIcons 
-                name="history" 
-                size={16} 
-                color={activeTab === 'history' ? (theme.name === 'dark' ? '#0F172A' : '#FFFFFF') : theme.colors.textSecondary} 
-              />
-              <Text style={[
-                styles.compactTabText,
-                activeTab === 'history' && styles.activeCompactTabText
-              ]}>
-                History
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.headerTitle}>Goals</Text>
         </View>
         
         <ThemeToggle onToggle={toggleTheme} theme={theme} safeAreaTop={0} inline={true} />
       </View>
       
-      {/* Tab Content */}
-      {activeTab === 'history' ? (
-        <GoalHistoryTab
-          theme={theme}
-          onSelectGoal={handleSelectHistoryGoal}
-        />
-      ) : (
+      {/* Main Goals Interface */}
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -942,7 +901,6 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
         </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      )}
 
     </SafeAreaView>
   );

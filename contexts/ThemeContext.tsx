@@ -30,6 +30,7 @@ export interface ThemeColors {
   inputText: string;
   inputFocusBackground: string;  // NEW: Dedicated focus background
   inputPlaceholder: string;      // NEW: Dedicated placeholder color
+  border: string;                // NEW: General border color
   
   // Animation colors
   animationPrimary: string;
@@ -47,89 +48,91 @@ export interface Theme {
   colors: ThemeColors;
 }
 
-// Light Theme - Enhanced with vibrant, lively colors
+// Light Theme - Vogue/Claude inspired elegant colors
 export const lightTheme: Theme = {
   name: 'light',
   colors: {
-    // Background colors
-    background: '#FFFFFF',
-    backgroundSecondary: '#F8FAFC',
-    backgroundTertiary: '#F1F5F9',
+    // Background colors - Pure, elegant whites and subtle grays
+    background: '#FEFEFE',                // Near-white with warmth
+    backgroundSecondary: '#F9FAFB',       // Subtle gray for surfaces
+    backgroundTertiary: '#F3F4F6',        // Card backgrounds
     
-    // Text colors
-    textPrimary: '#1E293B',
-    textSecondary: '#475569',
-    textTertiary: '#64748B',
+    // Text colors - Sophisticated grays
+    textPrimary: '#1F2937',               // Deep charcoal
+    textSecondary: '#6B7280',             // Medium gray
+    textTertiary: '#9CA3AF',              // Light gray
     
-    // Accent colors - Vibrant and lively
-    accent: '#F59E0B',                    // Warm gold
-    accentSecondary: '#EAB308',           // Rich yellow
-    accentVibrant: '#06B6D4',             // Cyan blue for life!
-    accentSoft: '#8B5CF6',                // Purple for elegance
+    // Accent colors - Sophisticated and minimal
+    accent: '#4F46E5',                    // Elegant indigo
+    accentSecondary: '#7C3AED',           // Refined purple
+    accentVibrant: '#059669',             // Subtle emerald
+    accentSoft: '#E5E7EB',                // Soft gray for highlights
     
     // UI element colors
-    buttonBackground: '#F1F5F9',
-    buttonText: '#475569',
-    buttonActiveBackground: '#1E293B',
+    buttonBackground: '#F9FAFB',
+    buttonText: '#6B7280',
+    buttonActiveBackground: '#4F46E5',
     buttonActiveText: '#FFFFFF',
-    inputBackground: '#F8FAFC',           // Softer than pure white
-    inputBorder: '#E2E8F0',
-    inputText: '#1E293B',
-    inputFocusBackground: '#F0F9FF',      // Light blue tint when focused
-    inputPlaceholder: '#94A3B8',          // Harmonious placeholder color
+    inputBackground: '#FEFEFE',
+    inputBorder: '#E5E7EB',
+    inputText: '#1F2937',
+    inputFocusBackground: '#F0F9FF',
+    inputPlaceholder: '#9CA3AF',
+    border: '#E5E7EB',                    // General border color
     
     // Animation colors
-    animationPrimary: '#F59E0B',
-    animationSecondary: '#06B6D4',        // Vibrant cyan
-    animationTertiary: '#8B5CF6',         // Purple accent
+    animationPrimary: '#4F46E5',
+    animationSecondary: '#7C3AED',
+    animationTertiary: '#059669',
     
-    // Gradient colors for life
-    gradientStart: '#F59E0B',             // Warm gold
-    gradientEnd: '#06B6D4',               // Cool cyan
-    gradientVibrant: '#8B5CF6',           // Purple for variety
+    // Gradient colors
+    gradientStart: '#4F46E5',
+    gradientEnd: '#7C3AED',
+    gradientVibrant: '#059669',
   },
 };
 
-// Dark Theme - Enhanced with vibrant, lively colors
+// Dark Theme - Sophisticated dark with elegant contrast
 export const darkTheme: Theme = {
   name: 'dark',
   colors: {
-    // Background colors
-    background: '#0F172A',
-    backgroundSecondary: '#1E293B',
-    backgroundTertiary: '#334155',
+    // Background colors - Rich blacks and sophisticated grays
+    background: '#0A0A0B',                // Deep black with subtle warmth
+    backgroundSecondary: '#1A1A1B',       // Card backgrounds
+    backgroundTertiary: '#2A2A2B',        // Elevated surfaces
     
-    // Text colors
-    textPrimary: '#F8FAFC',
-    textSecondary: '#CBD5E1',
-    textTertiary: '#94A3B8',
+    // Text colors - High contrast but not harsh
+    textPrimary: '#FAFAFA',               // Warm white
+    textSecondary: '#A1A1AA',             // Elegant gray
+    textTertiary: '#71717A',              // Subdued gray
     
-    // Accent colors - Vibrant and electric for dark mode
-    accent: '#FCD34D',                    // Bright gold
-    accentSecondary: '#F59E0B',           // Warm amber
-    accentVibrant: '#22D3EE',             // Electric cyan for energy!
-    accentSoft: '#A78BFA',                // Soft purple for elegance
+    // Accent colors - Sophisticated and minimal
+    accent: '#6366F1',                    // Elegant indigo
+    accentSecondary: '#8B5CF6',           // Refined purple  
+    accentVibrant: '#10B981',             // Emerald green
+    accentSoft: '#3F3F46',                // Soft dark gray
     
     // UI element colors
-    buttonBackground: '#334155',
-    buttonText: '#CBD5E1',
-    buttonActiveBackground: '#F8FAFC',
-    buttonActiveText: '#0F172A',
-    inputBackground: '#1E293B',           // Dark but not harsh
-    inputBorder: '#64748B',
-    inputText: '#F8FAFC',
-    inputFocusBackground: '#0F172A',      // Slightly darker when focused
-    inputPlaceholder: '#64748B',          // Softer placeholder in dark
+    buttonBackground: '#2A2A2B',
+    buttonText: '#A1A1AA',
+    buttonActiveBackground: '#6366F1',
+    buttonActiveText: '#FAFAFA',
+    inputBackground: '#1A1A1B',
+    inputBorder: '#3F3F46',
+    inputText: '#FAFAFA',
+    inputFocusBackground: '#0A0A0B',
+    inputPlaceholder: '#71717A',
+    border: '#3F3F46',                    // General border color
     
-    // Animation colors - Electric and vibrant
-    animationPrimary: '#FCD34D',          // Bright gold
-    animationSecondary: '#22D3EE',        // Electric cyan
-    animationTertiary: '#A78BFA',         // Soft purple
+    // Animation colors
+    animationPrimary: '#6366F1',
+    animationSecondary: '#8B5CF6',
+    animationTertiary: '#10B981',
     
-    // Gradient colors for life
-    gradientStart: '#FCD34D',             // Bright gold
-    gradientEnd: '#22D3EE',               // Electric cyan  
-    gradientVibrant: '#A78BFA',           // Purple magic
+    // Gradient colors
+    gradientStart: '#6366F1',
+    gradientEnd: '#8B5CF6',
+    gradientVibrant: '#10B981',
   },
 };
 

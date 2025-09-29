@@ -23,33 +23,21 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
   inline = false
 }) => {
   const toggleStyle = inline ? {
-    backgroundColor: theme.colors.backgroundSecondary,
-    borderRadius: 12,
+    // Seamless integration - no background, shadow, or elevation
     width: 44,
     height: 44,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    shadowColor: theme.colors.textSecondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   } : {
     position: 'absolute' as const,
     top: safeAreaTop + 20, // Position within safe area + padding
     right: 20,
     zIndex: 1000,
-    backgroundColor: theme.colors.cardBackground,
-    borderRadius: 25,
+    // Seamless integration - no background, shadow, or elevation
     width: 50,
     height: 50,
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
-    shadowColor: theme.colors.textSecondary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   };
 
   return (
@@ -58,7 +46,7 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = ({
         <MaterialIcons 
           name={theme.name === 'light' ? 'nightlight-round' : 'wb-sunny'} 
           size={20} 
-          color={theme.colors.textSecondary} 
+          color={theme.colors.textPrimary} 
         />
       </TouchableOpacity>
     </View>
