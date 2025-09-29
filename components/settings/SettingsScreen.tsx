@@ -7,14 +7,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    View
 } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
 import authService from '../../services/authService';
 import { AboutAndContact } from './AboutAndContact';
@@ -28,7 +26,6 @@ interface SettingsScreenProps {
 
 export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   const { theme, toggleTheme } = useTheme();
-  const insets = useSafeAreaInsets();
   const [isDarkMode, setIsDarkMode] = useState(theme.name === 'dark');
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [userEmail, setUserEmail] = useState<string>('');
@@ -68,19 +65,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Header with proper SafeArea spacing */}
-      <View style={[styles.header, { marginTop: 8 }]}>
-        <TouchableOpacity 
-          style={styles.backButton}
-          onPress={onClose || (() => {})}
-        >
-          <MaterialIcons name="arrow-back" size={24} color={theme.colors.textPrimary} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
-        <View style={styles.headerSpacer} />
-      </View>
-      
+    <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
 
         {/* 1. Account Management - Enhanced with profile details */}
@@ -151,41 +136,6 @@ const createStyles = (theme: any) => StyleSheet.create({
 
   scrollView: {
     flex: 1,
-  },
-
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: theme.colors.backgroundSecondary,
-    elevation: 2,
-    shadowColor: theme.colors.textSecondary,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: theme.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 1,
-  },
-
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: theme.colors.textPrimary,
-    letterSpacing: 0.3,
-  },
-
-  headerSpacer: {
-    width: 40,
   },
 
   card: {

@@ -6,7 +6,6 @@
  */
 
 import { AuthScreen } from '@/components/auth/AuthScreen';
-import { GoalCollectionScreen } from '@/components/goals/GoalCollectionScreen';
 import { FormOnboarding } from '@/components/onboarding/FormOnboarding';
 import { LoadingScreen } from '@/components/ui/LoadingScreen';
 import authService from '@/services/authService';
@@ -61,7 +60,6 @@ function useAppState() {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
-  const [goalsComplete, setGoalsComplete] = useState(false);
 
   useEffect(() => {
     checkAppState();
@@ -75,7 +73,6 @@ function useAppState() {
       if (currentUser) {
         const progress = await userProgressService.getProgressSummary();
         setOnboardingComplete(progress.onboarding.isCompleted);
-        setGoalsComplete(progress.goals.isCompleted);
       }
     } catch (error) {
       console.error('Error checking app state:', error);
@@ -88,14 +85,13 @@ function useAppState() {
     isLoading,
     user,
     onboardingComplete,
-    goalsComplete,
     refreshState: checkAppState
   };
 }
 
 export default function RootLayout() {
   useNotificationObserver();
-  const { isLoading, user, onboardingComplete, goalsComplete, refreshState } = useAppState();
+  const { isLoading, user, onboardingComplete, refreshState } = useAppState();
 
   useEffect(() => {
     setupNotificationCategories();
@@ -134,9 +130,15 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <TamaguiProvider config={config}>
-            <FormOnboarding onComplete={(userName: string) => {
-              console.log('Onboarding completed for:', userName);
-              refreshState();
+            <FormOnboarding onComplete={async (userName: string) => {
+              try {
+                // Save onboarding completion to storage
+                await userProgressService.setOnboardingComplete(userName);
+                // Refresh app state to trigger navigation
+                refreshState();
+              } catch (error) {
+                console.error('❌ Error saving onboarding completion:', error);
+              }
             }} />
             <StatusBar style="auto" />
           </TamaguiProvider>
@@ -145,23 +147,7 @@ export default function RootLayout() {
     );
   }
 
-  if (!goalsComplete) {
-    return (
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <TamaguiProvider config={config}>
-            <GoalCollectionScreen 
-              onComplete={refreshState} 
-              onOpenSettings={() => {}} // TODO: Implement modal settings
-            />
-            <StatusBar style="auto" />
-          </TamaguiProvider>
-        </ThemeProvider>
-      </SafeAreaProvider>
-    );
-  }
-
-  // Main app navigation with proper Stack setup
+  // Main app navigation - Goals Collection IS the main app!
   return (
     <SafeAreaProvider>
       <ThemeProvider>

@@ -9,16 +9,16 @@ import { MaterialIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createCollectionStyles } from '../../assets/styles/goals/collection.styles';
@@ -646,15 +646,8 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
         <TouchableOpacity
           style={styles.settingsButton}
           onPress={() => {
-            console.log('🔧 Settings button pressed');
-            console.log('🔧 onOpenSettings function:', !!onOpenSettings);
-            console.log('🔧 onOpenSettings type:', typeof onOpenSettings);
             if (onOpenSettings) {
-              console.log('🔧 Calling onOpenSettings...');
               onOpenSettings();
-              console.log('🔧 onOpenSettings called successfully');
-            } else {
-              console.log('❌ onOpenSettings not provided');
             }
           }}
           activeOpacity={0.7}

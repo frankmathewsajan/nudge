@@ -489,10 +489,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
   };
 
   const toggleAuthMode = () => {
-    console.log('Toggle auth mode called, current mode:', authMode);
-    const newMode = authMode === 'signin' ? 'signup' : 'signin';
-    console.log('Switching to mode:', newMode);
-    setAuthMode(newMode);
+    setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
     setEmail('');
     setPassword('');
     setConfirmPassword('');

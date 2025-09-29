@@ -60,12 +60,8 @@ export const useOnboardingFormController = (
   }, [isValid, onFormSubmit]);
 
   const handleFinalSubmit = useCallback(() => {
-    console.log('Final submit called, isValid:', isValid, 'name:', name.trim());
     if (isValid) {
-      console.log('Calling onFinalComplete with name:', name.trim());
       onFinalComplete(name.trim());
-    } else {
-      console.log('Form not valid for final submit');
     }
   }, [isValid, name, onFinalComplete]);
 

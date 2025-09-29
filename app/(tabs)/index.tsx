@@ -1,27 +1,26 @@
 /**
  * Home Tab Screen
  * 
- * Main home screen within the tab navigation.
+ * The main goals collection interface - this IS the app!
  */
 
-import { MainAppView } from '@/components/ui/MainAppView';
-import { useTheme } from '@/contexts/ThemeContext';
-import { useUserData } from '@/hooks/useUserData';
+import { GoalCollectionScreen } from '@/components/goals/GoalCollectionScreen';
 import { router } from 'expo-router';
 import React from 'react';
 
 export default function HomeTabScreen() {
-  const { theme } = useTheme();
-  const { userName } = useUserData();
+  const handleComplete = () => {
+    // Goals interface is the main app - no need to "complete" 
+    // This could trigger success animations or goal analysis
+  };
 
   const handleOpenSettings = () => {
     router.push('/modal/settings' as any);
   };
 
   return (
-    <MainAppView
-      theme={theme}
-      userName={userName}
+    <GoalCollectionScreen 
+      onComplete={handleComplete}
       onOpenSettings={handleOpenSettings}
     />
   );

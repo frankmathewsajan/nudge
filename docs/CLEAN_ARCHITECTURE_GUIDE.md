@@ -27,7 +27,7 @@ The entire application has been refactored following **Single Responsibility Pri
 - `OnboardingPolicy.tsx` (119 lines) - Policy acknowledgment section
 
 #### **Goal Collection Components** (`components/goals/`)
-- `GoalCollectionScreen.tsx` (145 lines) - Main goal collection interface
+- `GoalCollectionScreen.tsx` (145 lines) - Main goal collection interface with proper flow transition
 
 #### **Shared UI Components** (`components/ui/`)
 - `TypingText.tsx` (95 lines) - Clean animation presentation
