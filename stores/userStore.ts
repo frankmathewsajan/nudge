@@ -1,7 +1,7 @@
 // User Store - Global user state management with Zustand
 // Follows React Native Expo patterns
 
-import { storageService } from '@/services/storageService';
+import { storageService } from '@/services/storage/storageService';
 import { create } from 'zustand';
 
 export interface UserGoals {

@@ -4,7 +4,7 @@
  * The core goals collection interface - this IS the app!
  */
 
-import { GoalCollectionScreen } from '@/components/goals/GoalCollectionScreen';
+import { GoalCollectionScreen } from '@/components/goals/GoalCollection.component';
 import { router } from 'expo-router';
 import React from 'react';
 

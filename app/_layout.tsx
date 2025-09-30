@@ -5,14 +5,14 @@
  * Uses proper Expo Router patterns instead of programmatic redirects.
  */
 
-import { AuthScreen } from '@/components/auth/AuthScreen';
-import { FormOnboarding } from '@/components/onboarding/FormOnboarding';
-import { LoadingScreen } from '@/components/ui/LoadingScreen';
-import authService from '@/services/authService';
-import userProgressService from '@/services/userProgressService';
+import { AuthScreen } from '@/components/auth/AuthScreen.component';
+import { FormOnboarding } from '@/components/onboarding/FormOnboarding.component';
+import { LoadingScreen } from '@/components/ui/LoadingScreen.component';
+import authService from '@/services/auth/authService';
+import userProgressService from '@/services/storage/userProgressService';
 import config from '@/tamagui.config';
-import { handleNotificationResponse, setupNotificationCategories } from '@/utils/notifications';
-import { initializeSleepState } from '@/utils/sleepState';
+import { initializeSleepState } from '@/utils/data/sleepState.utils';
+import { handleNotificationResponse, setupNotificationCategories } from '@/utils/system/notifications.utils';
 import { TamaguiProvider } from '@tamagui/core';
 import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
@@ -53,7 +53,7 @@ function useNotificationObserver() {
   }, []);
 }
 
-import { AuthUser } from '@/services/authService';
+import { AuthUser } from '@/services/auth/authService';
 
 // App state management hook
 function useAppState() {

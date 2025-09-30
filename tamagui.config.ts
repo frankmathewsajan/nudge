@@ -3,41 +3,41 @@ import { createTamagui } from '@tamagui/core'
 
 // Enhanced color palette following Google Material Design 3 and color theory
 const colors = {
-  // Primary colors - Blue for trust and productivity
-  primary50: '#E3F2FD',
-  primary100: '#BBDEFB', 
-  primary200: '#90CAF9',
-  primary300: '#64B5F6',
-  primary400: '#42A5F5',
-  primary500: '#2196F3', // Main primary
-  primary600: '#1E88E5',
-  primary700: '#1976D2',
-  primary800: '#1565C0',
-  primary900: '#0D47A1',
+  // Primary colors - Golden for elegance and warmth
+  primary50: '#FFFBF0',
+  primary100: '#FFF3C4', 
+  primary200: '#FFE082',
+  primary300: '#FFCC02',
+  primary400: '#FFB300',
+  primary500: '#D4AF37', // Main primary - Classic gold
+  primary600: '#B8860B',
+  primary700: '#996515',
+  primary800: '#7A4F0E',
+  primary900: '#5C3A08',
 
-  // Secondary colors - Teal for balance and growth
-  secondary50: '#E0F2F1',
-  secondary100: '#B2DFDB',
-  secondary200: '#80CBC4', 
-  secondary300: '#4DB6AC',
-  secondary400: '#26A69A',
-  secondary500: '#009688', // Main secondary
-  secondary600: '#00897B',
-  secondary700: '#00796B',
-  secondary800: '#00695C',
-  secondary900: '#004D40',
+  // Secondary colors - Warm browns to complement gold
+  secondary50: '#F5F5DC',
+  secondary100: '#F0E68C',
+  secondary200: '#DDD6C1', 
+  secondary300: '#D2B48C',
+  secondary400: '#BC9A6A',
+  secondary500: '#A0824A', // Main secondary - Warm brown
+  secondary600: '#8B7355',
+  secondary700: '#654321',
+  secondary800: '#583C1F',
+  secondary900: '#4A2C2A',
 
-  // Accent colors - Orange for motivation and energy
-  accent50: '#FFF3E0',
-  accent100: '#FFE0B2',
-  accent200: '#FFCC80',
-  accent300: '#FFB74D',
-  accent400: '#FFA726',
-  accent500: '#FF9800', // Main accent
-  accent600: '#FB8C00',
-  accent700: '#F57C00',
-  accent800: '#EF6C00',
-  accent900: '#E65100',
+  // Accent colors - Golden glow for highlights and energy
+  accent50: '#FFFBF0',
+  accent100: '#FFF3C4',
+  accent200: '#FFEB9C',
+  accent300: '#FFE082',
+  accent400: '#FFD54F',
+  accent500: '#FFD700', // Main accent - Bright gold
+  accent600: '#FFA500',
+  accent700: '#FF8C00',
+  accent800: '#DAA520',
+  accent900: '#B8860B',
 
   // Success colors - Green for achievements
   success50: '#E8F5E8',

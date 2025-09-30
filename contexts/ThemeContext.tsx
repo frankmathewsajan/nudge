@@ -62,16 +62,16 @@ export const lightTheme: Theme = {
     textSecondary: '#6B7280',             // Medium gray
     textTertiary: '#9CA3AF',              // Light gray
     
-    // Accent colors - Sophisticated and minimal
-    accent: '#4F46E5',                    // Elegant indigo
-    accentSecondary: '#7C3AED',           // Refined purple
-    accentVibrant: '#059669',             // Subtle emerald
-    accentSoft: '#E5E7EB',                // Soft gray for highlights
+    // Accent colors - Golden elegance
+    accent: '#D4AF37',                    // Classic gold
+    accentSecondary: '#FFD700',           // Bright gold
+    accentVibrant: '#FFA500',             // Orange gold
+    accentSoft: '#FFF8DC',                // Cornsilk for highlights
     
     // UI element colors
     buttonBackground: '#F9FAFB',
     buttonText: '#6B7280',
-    buttonActiveBackground: '#4F46E5',
+    buttonActiveBackground: '#D4AF37',
     buttonActiveText: '#FFFFFF',
     inputBackground: '#FEFEFE',
     inputBorder: '#E5E7EB',
@@ -81,14 +81,14 @@ export const lightTheme: Theme = {
     border: '#E5E7EB',                    // General border color
     
     // Animation colors
-    animationPrimary: '#4F46E5',
-    animationSecondary: '#7C3AED',
-    animationTertiary: '#059669',
+    animationPrimary: '#D4AF37',
+    animationSecondary: '#FFD700',
+    animationTertiary: '#FFA500',
     
     // Gradient colors
-    gradientStart: '#4F46E5',
-    gradientEnd: '#7C3AED',
-    gradientVibrant: '#059669',
+    gradientStart: '#D4AF37',
+    gradientEnd: '#FFD700',
+    gradientVibrant: '#FFA500',
   },
 };
 
@@ -106,17 +106,17 @@ export const darkTheme: Theme = {
     textSecondary: '#A1A1AA',             // Elegant gray
     textTertiary: '#71717A',              // Subdued gray
     
-    // Accent colors - Sophisticated and minimal
-    accent: '#6366F1',                    // Elegant indigo
-    accentSecondary: '#8B5CF6',           // Refined purple  
-    accentVibrant: '#10B981',             // Emerald green
-    accentSoft: '#3F3F46',                // Soft dark gray
+    // Accent colors - Golden elegance for dark mode
+    accent: '#FFD700',                    // Bright gold for dark backgrounds
+    accentSecondary: '#FFA500',           // Orange gold
+    accentVibrant: '#DAA520',             // Goldenrod
+    accentSoft: '#2A2520',                // Dark golden brown
     
     // UI element colors
     buttonBackground: '#2A2A2B',
     buttonText: '#A1A1AA',
-    buttonActiveBackground: '#6366F1',
-    buttonActiveText: '#FAFAFA',
+    buttonActiveBackground: '#FFD700',
+    buttonActiveText: '#000000',
     inputBackground: '#1A1A1B',
     inputBorder: '#3F3F46',
     inputText: '#FAFAFA',
@@ -125,14 +125,14 @@ export const darkTheme: Theme = {
     border: '#3F3F46',                    // General border color
     
     // Animation colors
-    animationPrimary: '#6366F1',
-    animationSecondary: '#8B5CF6',
-    animationTertiary: '#10B981',
+    animationPrimary: '#FFD700',
+    animationSecondary: '#FFA500',
+    animationTertiary: '#DAA520',
     
     // Gradient colors
-    gradientStart: '#6366F1',
-    gradientEnd: '#8B5CF6',
-    gradientVibrant: '#10B981',
+    gradientStart: '#FFD700',
+    gradientEnd: '#FFA500',
+    gradientVibrant: '#DAA520',
   },
 };
 

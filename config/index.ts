@@ -1,7 +1,7 @@
 // Configuration file for the Nudge app
 // Update these values when setting up the Gemini API
 
-import ENV from '@/utils/env';
+import ENV from '@/utils/system/env.utils';
 
 export const config = {
   // Gemini API Configuration

@@ -5,20 +5,22 @@
  */
 
 import { createSideMenuStyles, MENU_WIDTH } from '@/assets/styles/app/side-menu.styles';
+import { SettingsModal } from '@/components/settings/SettingsModal.component';
+import { SettingsButton } from '@/components/ui/SettingsButton.component';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useUserData } from '@/hooks/useUserData';
-import authService from '@/services/authService';
+import { useUserData } from '@/hooks/app/useUserData';
+import authService from '@/services/auth/authService';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
-    Animated,
-    Modal,
-    Pressable,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View
+  Animated,
+  Modal,
+  Pressable,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -27,6 +29,7 @@ export default function SideMenuModal() {
   const { userName } = useUserData();
   const [slideAnim] = useState(new Animated.Value(-MENU_WIDTH));
   const [overlayOpacity] = useState(new Animated.Value(0));
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
 
   const styles = createSideMenuStyles(theme);
 
@@ -74,24 +77,12 @@ export default function SideMenuModal() {
   };
 
   const handleSettings = () => {
-    // Close menu first, then navigate to settings
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: -MENU_WIDTH,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(overlayOpacity, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      router.back(); // Close side menu
-      setTimeout(() => {
-        router.push('/modal/settings' as any); // Open settings after brief delay
-      }, 100);
-    });
+    // Open settings modal directly without navigation
+    setSettingsModalVisible(true);
+  };
+
+  const handleCloseSettings = () => {
+    setSettingsModalVisible(false);
   };
 
   const handleLogout = async () => {
@@ -184,13 +175,21 @@ export default function SideMenuModal() {
                 </Text>
               </View>
               <Text style={styles.userName}>{userName || 'User'}</Text>
-              <TouchableOpacity onPress={handleSettings} style={styles.settingsButton}>
-                <MaterialIcons name="settings" size={20} color={theme.colors.textSecondary} />
-              </TouchableOpacity>
+              <SettingsButton 
+                onPress={handleSettings} 
+                variant="minimal"
+                testID="side-menu-settings-button"
+              />
             </View>
           </View>
         </SafeAreaView>
       </Animated.View>
+
+      {/* Settings Modal */}
+      <SettingsModal 
+        visible={settingsModalVisible}
+        onClose={handleCloseSettings}
+      />
     </Modal>
   );
 }

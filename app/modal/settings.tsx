@@ -2,16 +2,33 @@
  * Settings Modal Screen
  * 
  * Modal presentation for settings using Expo Router modal patterns.
+ * Now uses the modular SettingsModal component for consistency.
  */
 
-import { SettingsScreen } from '@/components/settings/SettingsScreen';
+import { SettingsModal } from '@/components/settings/SettingsModal.component';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-export default function SettingsModal() {
+export default function SettingsModalRoute() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    // Show modal when route mounts
+    setVisible(true);
+  }, []);
+
   const handleClose = () => {
-    router.back();
+    setVisible(false);
+    // Small delay to allow animation to complete
+    setTimeout(() => {
+      router.back();
+    }, 200);
   };
 
-  return <SettingsScreen onClose={handleClose} />;
+  return (
+    <SettingsModal 
+      visible={visible}
+      onClose={handleClose}
+    />
+  );
 }
