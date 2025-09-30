@@ -8,14 +8,15 @@
 import { createSettingsStyles } from '@/assets/styles/app/settings.styles';
 import { useUserData } from '@/hooks/useUserData';
 import { MaterialIcons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -132,11 +133,17 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
     destructive?: boolean;
     rightElement?: React.ReactNode;
   }) => (
-    <TouchableOpacity 
-      style={[styles.settingRow, destructive && styles.destructiveRow]} 
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <View style={styles.settingRowContainer}>
+      <BlurView
+        intensity={theme.name === 'light' ? 15 : 30}
+        tint={theme.name === 'light' ? 'light' : 'dark'}
+        style={styles.settingRowBlur}
+      />
+      <TouchableOpacity 
+        style={[styles.settingRow, destructive && styles.destructiveRow]} 
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
       <View style={styles.settingIcon}>
         <MaterialIcons 
           name={icon as any} 
@@ -161,6 +168,7 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
         />
       ))}
     </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -178,16 +186,23 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ onClose }) => {
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* User Profile Section */}
-        <View style={styles.userSection}>
-          <View style={styles.userInfo}>
-            <View style={styles.userAvatar}>
-              <Text style={styles.userInitial}>
-                {userName ? userName.charAt(0).toUpperCase() : 'U'}
-              </Text>
-            </View>
-            <View style={styles.userDetails}>
-              <Text style={styles.userName}>{userName || 'User'}</Text>
-              <Text style={styles.userEmail}>{userEmail || 'No email'}</Text>
+        <View style={styles.userSectionContainer}>
+          <BlurView
+            intensity={theme.name === 'light' ? 20 : 40}
+            tint={theme.name === 'light' ? 'light' : 'dark'}
+            style={styles.userSectionBlur}
+          />
+          <View style={styles.userSection}>
+            <View style={styles.userInfo}>
+              <View style={styles.userAvatar}>
+                <Text style={styles.userInitial}>
+                  {userName ? userName.charAt(0).toUpperCase() : 'U'}
+                </Text>
+              </View>
+              <View style={styles.userDetails}>
+                <Text style={styles.userName}>{userName || 'User'}</Text>
+                <Text style={styles.userEmail}>{userEmail || 'No email'}</Text>
+              </View>
             </View>
           </View>
         </View>

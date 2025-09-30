@@ -14,7 +14,7 @@ const MENU_WIDTH = SCREEN_WIDTH;
 export const createSideMenuStyles = (theme: Theme) => StyleSheet.create({
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#000000',
+    backgroundColor: theme.name === 'light' ? 'rgba(0, 0, 0, 0.5)' : 'rgba(0, 0, 0, 0.7)',
   },
 
   overlayPress: {
@@ -27,12 +27,14 @@ export const createSideMenuStyles = (theme: Theme) => StyleSheet.create({
     top: 0,
     bottom: 0,
     width: MENU_WIDTH,
-    backgroundColor: theme.colors.background,
-    shadowColor: '#000',
+    backgroundColor: theme.name === 'light' ? theme.colors.background : 'rgba(15, 15, 20, 0.95)',
+    shadowColor: theme.name === 'light' ? '#000' : '#ffffff',
     shadowOffset: { width: 2, height: 0 },
-    shadowOpacity: 0.25,
+    shadowOpacity: theme.name === 'light' ? 0.25 : 0.4,
     shadowRadius: 10,
     elevation: 5,
+    borderRightWidth: theme.name === 'dark' ? 1 : 0,
+    borderRightColor: 'rgba(255, 255, 255, 0.1)',
   },
 
   menuContent: {
@@ -95,6 +97,7 @@ export const createSideMenuStyles = (theme: Theme) => StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 6,
     marginBottom: 2,
+    backgroundColor: theme.name === 'light' ? 'transparent' : 'rgba(255, 255, 255, 0.05)',
   },
 
   recentText: {
@@ -107,6 +110,11 @@ export const createSideMenuStyles = (theme: Theme) => StyleSheet.create({
     // Removed border for cleaner look
     paddingTop: 20,
     paddingBottom: 10,
+    backgroundColor: theme.name === 'light' ? 'transparent' : 'rgba(255, 255, 255, 0.02)',
+    marginHorizontal: -20,
+    paddingHorizontal: 20,
+    borderTopWidth: theme.name === 'dark' ? 1 : 0,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },
 
   userInfo: {

@@ -74,23 +74,25 @@ export default function SideMenuModal() {
   };
 
   const handleSettings = () => {
-    // Close menu first, then navigate to settings
+    // Close the side menu first with a faster animation
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: -MENU_WIDTH,
-        duration: 250,
+        duration: 150, // Faster close animation
         useNativeDriver: true,
       }),
       Animated.timing(overlayOpacity, {
         toValue: 0,
-        duration: 250,
+        duration: 150,
         useNativeDriver: true,
       }),
     ]).start(() => {
+      // Navigate after menu is closed
       router.back(); // Close side menu
+      // Use immediate navigation to settings
       setTimeout(() => {
-        router.push('/modal/settings' as any); // Open settings after brief delay
-      }, 100);
+        router.push('/modal/settings' as any);
+      }, 50); // Very short delay to ensure clean navigation
     });
   };
 

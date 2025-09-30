@@ -24,8 +24,9 @@ export const createSettingsStyles = (theme: Theme) => StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 0.5,
-    borderBottomColor: theme.colors.border,
+    borderBottomColor: theme.name === 'light' ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)',
     position: 'relative',
+    backgroundColor: theme.name === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.4)',
   },
 
   backButton: {
@@ -36,6 +37,7 @@ export const createSettingsStyles = (theme: Theme) => StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 22,
+    backgroundColor: theme.name === 'light' ? 'transparent' : 'rgba(255, 255, 255, 0.1)',
   },
 
   headerTitle: {
@@ -50,12 +52,26 @@ export const createSettingsStyles = (theme: Theme) => StyleSheet.create({
   },
 
   // User profile section at top
+  userSectionContainer: {
+    marginHorizontal: 16,
+    marginVertical: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+  },
+
+  userSectionBlur: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+
   userSection: {
     paddingHorizontal: 20,
     paddingVertical: 24,
-    borderBottomWidth: 0.5,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)', // Subtle beige tint
+    backgroundColor: theme.name === 'light' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(20, 20, 20, 0.7)',
   },
 
   userInfo: {
@@ -116,14 +132,29 @@ export const createSettingsStyles = (theme: Theme) => StyleSheet.create({
   },
 
   // Individual setting rows
+  settingRowContainer: {
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 4,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+  },
+
+  settingRowBlur: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.03)', // Very subtle transparency
-    borderBottomWidth: 0.5,
-    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.name === 'light' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(30, 30, 30, 0.8)',
+    borderBottomWidth: 0,
   },
 
   settingIcon: {

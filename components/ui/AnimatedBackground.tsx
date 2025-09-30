@@ -4,9 +4,8 @@ import Svg, { Circle, Defs, G, LinearGradient, Polygon, Stop } from 'react-nativ
 import { useTheme } from '../../contexts/ThemeContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-// Add extra height to ensure full coverage with spinning elements
-const extendedHeight = screenHeight * 1.5;
-const extendedWidth = screenWidth * 1.2;
+// Make it square and 2x screen height to ensure full coverage during rotation
+const ANIMATION_SIZE = screenHeight * 2;
 
 interface AnimatedBackgroundProps {
   intensity?: 'subtle' | 'moderate' | 'dynamic';
@@ -19,6 +18,28 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(0)).current;
   const orbitAnim = useRef(new Animated.Value(0)).current;
+
+  // Theme-aware color scheme - Much more subtle for background use
+  const getThemeColors = () => {
+    const isLight = theme.name === 'light';
+    return {
+      hexGradient: {
+        primary: isLight ? 'rgba(74, 144, 226, 0.03)' : 'rgba(147, 197, 253, 0.08)',
+        secondary: isLight ? 'rgba(16, 185, 129, 0.04)' : 'rgba(34, 197, 94, 0.10)',
+        tertiary: isLight ? 'rgba(245, 158, 11, 0.02)' : 'rgba(251, 191, 36, 0.06)',
+      },
+      orbit: {
+        primary: isLight ? 'rgba(74, 144, 226, 0.05)' : 'rgba(147, 197, 253, 0.12)',
+        opacity: isLight ? 0.04 : 0.08,
+      },
+      particles: {
+        primary: isLight ? 'rgba(74, 144, 226, 0.06)' : 'rgba(147, 197, 253, 0.10)',
+        opacity: isLight ? 0.05 : 0.08,
+      }
+    };
+  };
+
+  const themeColors = getThemeColors();
 
   // Create hexagon points for hexagonal grid
   const createHexagonPoints = (centerX: number, centerY: number, radius: number) => {
@@ -39,8 +60,8 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
     const horizontalSpacing = hexRadius * 1.73; // √3 * radius
     const verticalSpacing = hexRadius * 1.5;
     
-    for (let row = -4; row < Math.ceil(extendedHeight / verticalSpacing) + 4; row++) {
-      for (let col = -4; col < Math.ceil(extendedWidth / horizontalSpacing) + 4; col++) {
+    for (let row = -4; row < Math.ceil(ANIMATION_SIZE / verticalSpacing) + 4; row++) {
+      for (let col = -4; col < Math.ceil(ANIMATION_SIZE / horizontalSpacing) + 4; col++) {
         const x = col * horizontalSpacing + (row % 2) * (horizontalSpacing / 2);
         const y = row * verticalSpacing;
         
@@ -82,67 +103,39 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
   const orbits = generateOrbits();
 
   useEffect(() => {
-    // Continuous rotation animation
+    // Continuous rotation animation - slower for subtle background effect
     const rotateAnimation = Animated.loop(
       Animated.timing(rotateAnim, {
         toValue: 1,
-        duration: 60000, // 60 seconds for full rotation
+        duration: 120000, // 2 minutes for full rotation
         useNativeDriver: true,
       })
     );
 
-    // Pulsing animation
-    const pulseAnimation = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, {
-          toValue: 1,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(pulseAnim, {
-          toValue: 0,
-          duration: 3000,
-          useNativeDriver: true,
-        }),
-      ])
-    );
-
-    // Orbit animation
+    // Orbit animation - slower for subtle background effect
     const orbitAnimation = Animated.loop(
       Animated.timing(orbitAnim, {
         toValue: 1,
-        duration: 40000, // 40 seconds for orbit
+        duration: 80000, // 80 seconds for orbit
         useNativeDriver: true,
       })
     );
 
-    // Start all animations
+    // Start animations (removed pulse animation to prevent blinking/sharpening)
     rotateAnimation.start();
-    pulseAnimation.start();
     orbitAnimation.start();
 
     // Cleanup
     return () => {
       rotateAnimation.stop();
-      pulseAnimation.stop();
       orbitAnimation.stop();
     };
-  }, [rotateAnim, pulseAnim, orbitAnim]);
+  }, [rotateAnim, orbitAnim]);
 
   // Interpolated values
   const rotation = rotateAnim.interpolate({
     inputRange: [0, 1],
     outputRange: ['0deg', '360deg'],
-  });
-
-  const pulseScale = pulseAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 1.1],
-  });
-
-  const pulseOpacity = pulseAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0.3, 0.6, 0.3],
   });
 
   const orbitRotation = orbitAnim.interpolate({
@@ -152,22 +145,31 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
 
   return (
     <View style={styles.container}>
+      {/* Theme-adaptive translucent background overlay */}
+      <View style={[
+        styles.backgroundOverlay,
+        {
+          backgroundColor: theme.name === 'light' 
+            ? 'rgba(250, 250, 255, 0.4)' 
+            : 'rgba(15, 15, 20, 0.6)'
+        }
+      ]} />
+      
       {/* Hexagonal Grid Layer */}
       <Animated.View
         style={[
           styles.hexLayer,
           {
             transform: [{ rotate: rotation }],
-            opacity: pulseOpacity,
           },
         ]}
       >
-        <Svg height={screenHeight * 1.5} width={screenWidth * 1.5} style={styles.svg}>
+        <Svg height={ANIMATION_SIZE} width={ANIMATION_SIZE} style={styles.svg}>
           <Defs>
             <LinearGradient id="hexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor={theme.colors.animationSecondary} stopOpacity="0.15" />
-              <Stop offset="50%" stopColor={theme.colors.animationPrimary} stopOpacity="0.25" />
-              <Stop offset="100%" stopColor={theme.colors.animationTertiary} stopOpacity="0.15" />
+              <Stop offset="0%" stopColor={themeColors.hexGradient.tertiary} stopOpacity="1" />
+              <Stop offset="50%" stopColor={themeColors.hexGradient.primary} stopOpacity="1" />
+              <Stop offset="100%" stopColor={themeColors.hexGradient.secondary} stopOpacity="1" />
             </LinearGradient>
           </Defs>
           {hexGrid.map((hex) => (
@@ -176,7 +178,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
               points={hex.points}
               fill="none"
               stroke="url(#hexGradient)"
-              strokeWidth="0.5"
+              strokeWidth="0.2"
             />
           ))}
         </Svg>
@@ -194,9 +196,9 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
         <Svg height={screenHeight} width={screenWidth} style={styles.svg}>
           <Defs>
             <LinearGradient id="orbitGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <Stop offset="0%" stopColor={theme.colors.animationPrimary} stopOpacity="0" />
-              <Stop offset="50%" stopColor={theme.colors.animationPrimary} stopOpacity="0.3" />
-              <Stop offset="100%" stopColor={theme.colors.animationPrimary} stopOpacity="0" />
+              <Stop offset="0%" stopColor={themeColors.orbit.primary} stopOpacity="0" />
+              <Stop offset="50%" stopColor={themeColors.orbit.primary} stopOpacity="1" />
+              <Stop offset="100%" stopColor={themeColors.orbit.primary} stopOpacity="0" />
             </LinearGradient>
           </Defs>
           {orbits.map((orbit) => (
@@ -208,14 +210,14 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
                 fill="none"
                 stroke="url(#orbitGradient)"
                 strokeWidth="1"
-                opacity={orbit.opacity}
+                opacity={themeColors.orbit.opacity}
               />
               <Circle
                 cx={orbit.centerX + orbit.radius}
                 cy={orbit.centerY}
                 r="3"
-                fill={theme.colors.animationPrimary}
-                opacity={orbit.opacity * 2}
+                fill={themeColors.orbit.primary.replace(/,\s*[\d.]+\)/, ', 1)')}
+                opacity={themeColors.orbit.opacity * 1.5}
               />
             </G>
           ))}
@@ -223,15 +225,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
       </Animated.View>
 
       {/* Floating Particles Layer */}
-      <Animated.View
-        style={[
-          styles.particleLayer,
-          {
-            transform: [{ scale: pulseScale }],
-            opacity: pulseOpacity,
-          },
-        ]}
-      >
+      <View style={styles.particleLayer}>
         <Svg height={screenHeight} width={screenWidth} style={styles.svg}>
           {Array.from({ length: 20 }, (_, i) => (
             <Circle
@@ -239,12 +233,12 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({ intensity = 'mo
               cx={Math.random() * screenWidth}
               cy={Math.random() * screenHeight}
               r={Math.random() * 2 + 0.5}
-              fill={theme.colors.animationPrimary}
-              opacity={Math.random() * 0.3 + 0.1}
+              fill={themeColors.particles.primary.replace(/,\s*[\d.]+\)/, ', 1)')}
+              opacity={themeColors.particles.opacity + Math.random() * 0.1}
             />
           ))}
         </Svg>
-      </Animated.View>
+      </View>
     </View>
   );
 };
@@ -258,15 +252,23 @@ const styles = StyleSheet.create({
     bottom: 0,
     overflow: 'hidden',
   },
+  backgroundOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
+  },
   svg: {
     position: 'absolute',
   },
   hexLayer: {
     position: 'absolute',
-    top: -screenHeight * 0.25,
-    left: -screenWidth * 0.25,
-    right: 0,
-    bottom: 0,
+    top: -(ANIMATION_SIZE - screenHeight) / 2,
+    left: -(ANIMATION_SIZE - screenWidth) / 2,
+    width: ANIMATION_SIZE,
+    height: ANIMATION_SIZE,
   },
   orbitLayer: {
     position: 'absolute',
