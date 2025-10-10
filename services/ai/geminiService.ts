@@ -634,7 +634,6 @@ const attemptGeminiAPICall = async (userGoal: string, apiKey: string): Promise<G
     console.log('Sending request to Gemini API...');
     console.log('API URL:', `${GEMINI_API_BASE_URL}/models/gemini-1.5-flash:generateContent`);
     console.log('API Key present:', !!apiKey);
-    console.log('API Key prefix:', apiKey.substring(0, 10) + '...');
     
     let response;
     try {
