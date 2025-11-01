@@ -49,10 +49,29 @@ export class UserProgressService {
    */
   async setOnboardingComplete(userName: string): Promise<void> {
     try {
+      // Save to AsyncStorage
       await AsyncStorage.multiSet([
         [STORAGE_KEYS.ONBOARDING_COMPLETED, 'true'],
         [STORAGE_KEYS.ONBOARDING_USER_NAME, userName.trim()],
       ]);
+      
+      // Also sync to Supabase profiles table
+      try {
+        const authService = require('../auth/authService').default;
+        const currentUser = authService.getCurrentUser();
+        
+        if (currentUser) {
+          const userProfileService = require('../auth/userProfileService').default;
+          await userProfileService.updateUserProfile(currentUser.uid, {
+            onboardingCompleted: true,
+            displayName: userName.trim(),
+          });
+          console.log('✅ Onboarding status synced to Supabase profiles');
+        }
+      } catch (syncError) {
+        console.warn('⚠️ Could not sync onboarding to Supabase:', syncError);
+        // Don't throw - local save succeeded
+      }
     } catch (error) {
       console.error('Error saving onboarding completion:', error);
       throw new Error('Failed to save onboarding progress');

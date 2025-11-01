@@ -300,13 +300,15 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onAuthSuccess }) => {
 
     checkAuthState();
 
-    const unsubscribe = authService.onAuthStateChange((user) => {
+    const { data: { subscription } } = authService.onAuthStateChange((user) => {
       if (user) {
         onAuthSuccess(user);
       }
     });
 
-    return unsubscribe;
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [onAuthSuccess]);
 
   const startAnimationSequence = () => {

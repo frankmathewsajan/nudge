@@ -10,24 +10,23 @@ import { MaterialIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createCollectionStyles } from '../../assets/styles/goals/collection.styles';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useGoalCollection } from '../../hooks/goals/useGoalCollection';
 import { useKeyboardAware } from '../../hooks/goals/useKeyboardAware';
-import { analyzeGoalsWithFirebaseAI } from '../../services/ai/firebaseAiService';
-import { GoalAnalysisResponse } from '../../services/ai/geminiService';
+import geminiService, { GoalAnalysisResponse } from '../../services/ai/geminiService';
 import { storageService } from '../../services/storage/storageService';
 import { GoalAnalysisResponse as V2GoalAnalysisResponse } from '../../utils/ai/geminiTypes';
 import AnimatedBackground from '../ui/AnimatedBackground.component';
@@ -185,14 +184,8 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
         if (setTerminalStage) setTerminalStage('parsing');
       }, 2000);
       
-      const v2Analysis = await analyzeGoalsWithFirebaseAI({
-        goals: [currentGoalText],
-        userContext: {
-          availability: ['morning'],
-          currentTime: new Date().toISOString()
-        }
-      });
-      const analysis = convertV2ToOldFormat(v2Analysis);
+      const v2Analysis = await geminiService.analyzeGoalWithGemini(currentGoalText);
+      const analysis = v2Analysis; // No conversion needed - using same format
       setTerminalStage('success');
       setGoalAnalysis(analysis);
       setCanRetry(false);
@@ -256,23 +249,17 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
           if (setTerminalStage) setTerminalStage('parsing');
         }, 3000);
         
-        const v2Analysis = await analyzeGoalsWithFirebaseAI({
-          goals: [goal.text],
-          userContext: {
-            availability: ['morning'],
-            currentTime: new Date().toISOString()
-          }
-        });
-        const analysis = convertV2ToOldFormat(v2Analysis);
+        const v2Analysis = await geminiService.analyzeGoalWithGemini(goal.text);
+        const analysis = v2Analysis; // No conversion needed - using same format
         
         // Check if this is a fallback response (which means there was an error)
         const isFallbackResponse = analysis.primary_goal.analysis.includes("This is a great goal that can significantly improve your skills and capabilities. Breaking it down into manageable steps with proper time management");
         
         if (isFallbackResponse) {
-          console.log('Using V2 fallback response due to API error');
+          console.log('Using fallback response due to API error');
           setTerminalStage('success'); // Still show success to user for better UX
         } else {
-          console.log('Goal analysis completed successfully with V2 format');
+          console.log('Goal analysis completed successfully');
           setTerminalStage('success');
         }
         

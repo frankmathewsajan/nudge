@@ -1,21 +1,12 @@
 /**
  * Authentication Service
  *
- * Centralizes Firebase Auth interactions for email/password authentication.
+ * Centralizes Supabase Auth interactions for email/password authentication.
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {
-  createUserWithEmailAndPassword,
-  deleteUser,
-  onAuthStateChanged,
-  sendEmailVerification,
-  signInWithEmailAndPassword,
-  signOut,
-  User,
-} from 'firebase/auth';
-
-import { auth } from '../../config/firebase';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from '../../config/supabase';
 import userProfileService from './userProfileService';
 
 export interface AuthUser {
@@ -26,15 +17,26 @@ export interface AuthUser {
   isEmailVerified: boolean;
 }
 
-const convertFirebaseUser = (user: User): AuthUser => ({
-  uid: user.uid,
-  email: user.email,
-  displayName: user.displayName,
-  photoURL: user.photoURL,
-  isEmailVerified: user.emailVerified,
+// Cached current user for synchronous access
+let cachedCurrentUser: AuthUser | null = null;
+
+// Initialize cached user from session
+supabase.auth.getSession().then(({ data: { session } }) => {
+  cachedCurrentUser = session?.user ? convertSupabaseUser(session.user) : null;
 });
 
-// Signup rate limiting
+// Update cache on auth state change
+supabase.auth.onAuthStateChange((_event, session) => {
+  cachedCurrentUser = session?.user ? convertSupabaseUser(session.user) : null;
+});
+
+const convertSupabaseUser = (user: User): AuthUser => ({
+  uid: user.id,
+  email: user.email ?? null,
+  displayName: user.user_metadata?.display_name ?? user.user_metadata?.name ?? null,
+  photoURL: user.user_metadata?.avatar_url ?? null,
+  isEmailVerified: !!user.email_confirmed_at,
+});// Signup rate limiting
 let lastSignupAttempt: number = 0;
 const SIGNUP_COOLDOWN = 5000; // 5 seconds between signup attempts
 
@@ -53,38 +55,63 @@ export const signUpWithEmail = async (
     
     lastSignupAttempt = now;
     
-    console.log('📝 Starting email sign-up...');
-    const result = await createUserWithEmailAndPassword(auth, email, password);
+    console.log('📝 Starting email sign-up with Supabase...');
     
-    // Automatically send email verification (only once during signup)
+    // Sign up with Supabase
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          display_name: displayName,
+        },
+      },
+    });
+
+    if (error) {
+      console.error('❌ Supabase signup error:', error);
+      throw error;
+    }
+
+    if (!data.user) {
+      throw new Error('No user returned from Supabase signup');
+    }
+    
+    // Automatically send email verification (Supabase handles this)
     logEmailSend('SIGNUP');
-    console.log('📧 Sending verification email...');
-    await sendEmailVerification(result.user);
     console.log('✅ Verification email sent successfully');
     
-    // Create user profile in Firestore with display name
-    await userProfileService.createUserProfile(result.user.uid, email, displayName ? { displayName } : undefined);
+    // Update the profile with display name (profile already created by trigger)
+    if (displayName) {
+      try {
+        await userProfileService.updateUserProfile(data.user.id, { displayName });
+        console.log('✅ Profile updated with display name');
+      } catch (profileError) {
+        console.warn('⚠️ Could not update profile with display name:', profileError);
+        // Don't throw - signup was successful, profile update is optional
+      }
+    }
     
-    console.log('✅ Email sign-up successful and profile created');
-    return convertFirebaseUser(result.user);
+    console.log('✅ Email sign-up successful');
+    return convertSupabaseUser(data.user);
   } catch (error: any) {
     console.error('❌ Email sign-up failed:', error);
 
-    if (error.code === 'auth/operation-not-allowed') {
+    if (error.message?.includes('not enabled')) {
       throw new Error(
-        'Email authentication is not enabled in Firebase Console. Enable Email/Password auth in Firebase Console.',
+        'Email authentication is not enabled in Supabase Dashboard. Enable Email/Password auth in Supabase Dashboard.',
       );
     }
-    if (error.code === 'auth/weak-password') {
+    if (error.message?.includes('Password')) {
       throw new Error('Password should be at least 6 characters long.');
     }
-    if (error.code === 'auth/email-already-in-use') {
+    if (error.message?.includes('already registered')) {
       throw new Error('This email is already registered. Try signing in instead.');
     }
-    if (error.code === 'auth/invalid-email') {
+    if (error.message?.includes('invalid email')) {
       throw new Error('Please enter a valid email address.');
     }
-    if (error.code === 'auth/too-many-requests') {
+    if (error.message?.includes('too many')) {
       throw new Error('Too many requests. Please wait a few minutes before trying again.');
     }
 
@@ -97,31 +124,59 @@ export const signInWithEmail = async (
   password: string,
 ): Promise<AuthUser> => {
   try {
-    console.log('📧 Starting email sign-in...');
-    const result = await signInWithEmailAndPassword(auth, email, password);
+    console.log('📧 Starting email sign-in with Supabase...');
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error('❌ Supabase signin error:', error);
+      throw error;
+    }
+
+    if (!data.user) {
+      throw new Error('No user returned from Supabase signin');
+    }
+
     console.log('✅ Email sign-in successful');
-    return convertFirebaseUser(result.user);
+    
+    // Restore user data from backup (if exists)
+    try {
+      const restoreResult = await userProfileService.restoreUserDataFromBackup(data.user.id);
+      if (restoreResult.restored) {
+        console.log(`✅ Restored ${restoreResult.restoredItems.length} data items from backup`);
+      } else if (!restoreResult.hadBackup) {
+        console.log('ℹ️ No previous backup found (first time login or new user)');
+      }
+    } catch (restoreError) {
+      console.warn('⚠️ Could not restore backup data:', restoreError);
+      // Continue with login even if restore fails
+    }
+    
+    return convertSupabaseUser(data.user);
   } catch (error: any) {
     console.error('❌ Email sign-in failed:', error);
 
-    if (error.code === 'auth/operation-not-allowed') {
+    if (error.message?.includes('not enabled')) {
       throw new Error(
-        'Email authentication is not enabled in Firebase Console. Enable Email/Password auth in Firebase Console.',
+        'Email authentication is not enabled in Supabase Dashboard. Enable Email/Password auth in Supabase Dashboard.',
       );
     }
-    if (error.code === 'auth/user-not-found') {
-      throw new Error('No account found with this email. Please sign up first.');
+    if (error.message?.includes('Invalid login credentials')) {
+      throw new Error('Invalid email or password. Please try again.');
     }
-    if (error.code === 'auth/wrong-password') {
-      throw new Error('Incorrect password. Please try again.');
+    if (error.message?.includes('Email not confirmed')) {
+      throw new Error('Please verify your email before signing in.');
     }
-    if (error.code === 'auth/invalid-email') {
+    if (error.message?.includes('invalid email')) {
       throw new Error('Please enter a valid email address.');
     }
-    if (error.code === 'auth/user-disabled') {
+    if (error.message?.includes('disabled')) {
       throw new Error('This account has been disabled. Please contact support.');
     }
-    if (error.code === 'auth/too-many-requests') {
+    if (error.message?.includes('too many')) {
       throw new Error('Too many requests. Please wait a few minutes before trying again.');
     }
 
@@ -131,10 +186,29 @@ export const signInWithEmail = async (
 
 export const handleAuthPersistence = async (): Promise<AuthUser | null> => {
   try {
-    const user = auth.currentUser;
+    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       console.log('✅ Restored auth state from persistence');
-      return convertFirebaseUser(user);
+      
+      // Check if we need to restore user data from backup
+      // Only restore if local storage is empty (data was cleared)
+      try {
+        const hasLocalData = await AsyncStorage.getItem('@nudge_onboarding_completed');
+        if (!hasLocalData) {
+          console.log('🔄 Local data missing, attempting to restore from backup...');
+          const restoreResult = await userProfileService.restoreUserDataFromBackup(user.id);
+          if (restoreResult.restored) {
+            console.log(`✅ Restored ${restoreResult.restoredItems.length} data items from backup`);
+          }
+        } else {
+          console.log('ℹ️ Local data exists, skipping restore');
+        }
+      } catch (restoreError) {
+        console.warn('⚠️ Could not check/restore backup data:', restoreError);
+        // Continue anyway
+      }
+      
+      return convertSupabaseUser(user);
     }
     return null;
   } catch (error: any) {
@@ -147,13 +221,14 @@ export const signOutUser = async (): Promise<void> => {
   try {
     console.log('🚪 Starting comprehensive sign out process...');
     
-    const currentUser = auth.currentUser;
+    // Get current user from Supabase
+    const { data: { user } } = await supabase.auth.getUser();
     
-    // If we have a user, sync all data to Firestore first
-    if (currentUser) {
-      console.log('🔄 Syncing local data to Firestore before logout...');
+    // If we have a user, sync all data to database first
+    if (user) {
+      console.log('🔄 Syncing local data to database before logout...');
       try {
-        await userProfileService.syncAllDataToFirestore(currentUser.uid);
+        await userProfileService.syncAllDataToFirestore(user.id);
         console.log('✅ Data sync completed successfully');
       } catch (syncError) {
         console.warn('⚠️ Data sync failed, continuing with logout:', syncError);
@@ -167,8 +242,9 @@ export const signOutUser = async (): Promise<void> => {
     // Clear all other user data (goals, history, etc.)
     await clearAllUserData();
     
-    // Sign out from Firebase
-    await signOut(auth);
+    // Sign out from Supabase
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     
     console.log('✅ User signed out successfully with data backup');
   } catch (error: any) {
@@ -210,16 +286,30 @@ const clearAllUserData = async (): Promise<void> => {
 };
 
 export const getCurrentUser = (): AuthUser | null => {
-  const user = auth.currentUser;
-  return user ? convertFirebaseUser(user) : null;
+  return cachedCurrentUser;
 };
 
-export const onAuthStateChange = (callback: (user: AuthUser | null) => void) =>
-  onAuthStateChanged(auth, (user) => {
-    callback(user ? convertFirebaseUser(user) : null);
-  });
+export const getCurrentUserAsync = async (): Promise<AuthUser | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const authUser = user ? convertSupabaseUser(user) : null;
+    cachedCurrentUser = authUser; // Update cache
+    return authUser;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
+};
 
-export const isAuthenticated = (): boolean => auth.currentUser !== null;
+export const onAuthStateChange = (callback: (user: AuthUser | null) => void) => {
+  return supabase.auth.onAuthStateChange((_event, session) => {
+    callback(session?.user ? convertSupabaseUser(session.user) : null);
+  });
+};
+
+export const isAuthenticated = (): boolean => {
+  return cachedCurrentUser !== null;
+};
 
 // Rate limiting for email verification
 let lastEmailSent: number = 0;
@@ -232,13 +322,13 @@ const logEmailSend = (context: string) => {
 
 export const sendEmailVerificationToCurrentUser = async (): Promise<void> => {
   try {
-    const user = auth.currentUser;
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('No authenticated user found');
     }
     
     // Check if user is already verified
-    if (user.emailVerified) {
+    if (user.email_confirmed_at) {
       console.log('📧 User email is already verified, skipping verification email');
       return;
     }
@@ -252,7 +342,15 @@ export const sendEmailVerificationToCurrentUser = async (): Promise<void> => {
     
     logEmailSend('RESEND');
     console.log('📧 Sending email verification...');
-    await sendEmailVerification(user);
+    
+    // Resend verification email
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: user.email!,
+    });
+    
+    if (error) throw error;
+    
     lastEmailSent = now;
     console.log('✅ Email verification sent successfully');
   } catch (error: any) {
@@ -261,34 +359,32 @@ export const sendEmailVerificationToCurrentUser = async (): Promise<void> => {
   }
 };
 
-export const checkEmailVerification = (): boolean => {
-  const user = auth.currentUser;
-  return user ? user.emailVerified : false;
+export const checkEmailVerification = async (): Promise<boolean> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user ? !!user.email_confirmed_at : false;
 };
 
 export const reloadUserAndCheckVerification = async (): Promise<boolean> => {
   try {
-    const user = auth.currentUser;
-    if (!user) {
-      return false;
-    }
+    // Refresh the session to get updated user data
+    const { data: { session }, error } = await supabase.auth.refreshSession();
+    if (error) throw error;
     
-    await user.reload();
-    return user.emailVerified;
+    return session?.user?.email_confirmed_at ? true : false;
   } catch (error: any) {
-    console.error('❌ Error reloading user:', error);
+    console.error('❌ Error refreshing session:', error);
     return false;
   }
 };
 
 export const checkOnboardingStatus = async (): Promise<boolean> => {
   try {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       return false;
     }
     
-    return await userProfileService.isOnboardingCompleted(currentUser.uid);
+    return await userProfileService.isOnboardingCompleted(user.id);
   } catch (error) {
     console.error('❌ Error checking onboarding status:', error);
     return false;
@@ -297,12 +393,12 @@ export const checkOnboardingStatus = async (): Promise<boolean> => {
 
 export const completeOnboarding = async (): Promise<void> => {
   try {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       throw new Error('No authenticated user found');
     }
     
-    await userProfileService.markOnboardingCompleted(currentUser.uid);
+    await userProfileService.markOnboardingCompleted(user.id);
     console.log('✅ Onboarding completed');
   } catch (error) {
     console.error('❌ Error completing onboarding:', error);
@@ -317,25 +413,27 @@ export const completeOnboarding = async (): Promise<void> => {
  */
 export const deleteAccount = async (): Promise<{ success: boolean; error?: string }> => {
   try {
-    const currentUser = auth.currentUser;
-    if (!currentUser) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
       return { success: false, error: 'No authenticated user found' };
     }
 
     console.log('🗑️ Deleting user account and data...');
     
-    // First delete user profile data from Firestore
+    // First delete user profile data from database
     try {
-      await userProfileService.deleteUserProfile(currentUser.uid);
+      await userProfileService.deleteUserProfile(user.id);
       console.log('✅ User profile data deleted');
     } catch (profileError) {
       console.warn('⚠️ Error deleting profile data:', profileError);
       // Continue with account deletion even if profile deletion fails
     }
 
-    // Delete the Firebase Auth account
-    await deleteUser(currentUser);
-    console.log('✅ Firebase Auth account deleted');
+    // Delete the Supabase Auth account
+    const { error } = await supabase.auth.admin.deleteUser(user.id);
+    if (error) throw error;
+    
+    console.log('✅ Supabase Auth account deleted');
 
     return { success: true };
   } catch (error) {

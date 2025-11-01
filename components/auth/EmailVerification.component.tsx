@@ -54,17 +54,40 @@ export const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = (
   }, [resendCooldown]);
 
   useEffect(() => {
-    // Auto-check verification status periodically
+    // Auto-check verification status every 30 seconds
+    // (User might verify on laptop/desktop)
     const interval = setInterval(async () => {
+      console.log('🔄 Checking email verification status...');
       const isVerified = await authService.reloadUserAndCheckVerification();
       if (isVerified) {
-        console.log('✅ Email verified automatically');
-        onVerificationComplete();
+        console.log('✅ Email verified automatically detected');
+        Alert.alert(
+          'Email Verified! 🎉',
+          'Your email has been successfully verified.',
+          [
+            {
+              text: 'Continue',
+              onPress: onVerificationComplete,
+            },
+          ]
+        );
       }
-    }, 3000);
+    }, 30000); // Check every 30 seconds
+
+    // Also check immediately on mount
+    checkVerificationOnMount();
 
     return () => clearInterval(interval);
   }, [onVerificationComplete]);
+
+  const checkVerificationOnMount = async () => {
+    // Check if already verified (in case user clicked the link)
+    const isVerified = await authService.reloadUserAndCheckVerification();
+    if (isVerified) {
+      console.log('✅ Email already verified on mount');
+      onVerificationComplete();
+    }
+  };
 
   const animateCheck = useCallback(() => {
     Animated.sequence([

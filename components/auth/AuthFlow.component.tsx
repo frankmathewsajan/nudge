@@ -40,7 +40,7 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({
     checkInitialAuthState();
 
     // Listen for auth state changes
-    const unsubscribe = authService.onAuthStateChange(async (user) => {
+    const { data: { subscription } } = authService.onAuthStateChange(async (user) => {
       if (user) {
         await handleAuthenticatedUser(user);
       } else {
@@ -49,7 +49,9 @@ export const AuthFlow: React.FC<AuthFlowProps> = ({
       }
     });
 
-    return unsubscribe;
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const checkInitialAuthState = async () => {

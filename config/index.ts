@@ -3,6 +3,9 @@
 
 import ENV from '@/utils/system/env.utils';
 
+// Export Supabase client
+export { supabase } from './supabase';
+
 export const config = {
   // Gemini API Configuration
   gemini: {

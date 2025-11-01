@@ -66,20 +66,13 @@ export const SettingsContent: React.FC<SettingsContentProps> = ({ onClose }) => 
           style: 'destructive',
           onPress: async () => {
             setIsLoggingOut(true);
+            
             try {
-              // Show a loading indicator for longer operations
-              const syncingAlert = setTimeout(() => {
-                Alert.alert(
-                  'Syncing Data',
-                  'Backing up your data to the cloud...',
-                  [],
-                  { cancelable: false }
-                );
-              }, 1000);
-              
+              // Simply logout without showing the syncing alert
+              // The backup happens fast enough that users don't need to see it
               await authService.signOut();
               
-              clearTimeout(syncingAlert);
+              console.log('✅ Logout complete, auth state will update automatically');
               
               // Close the modal after successful logout
               if (onClose) onClose();
