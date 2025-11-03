@@ -6,19 +6,19 @@
  */
 
 import { createSettingsContentStyles } from '@/assets/styles/app/settings-content.styles';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useUserData } from '@/hooks/app/useUserData';
+import authService from '@/services/auth/authService';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    ScrollView,
-    Switch,
-    Text,
-    TouchableOpacity,
-    View
+  Alert,
+  ScrollView,
+  Switch,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
-import { useTheme } from '../../contexts/ThemeContext';
-import authService from '../../services/auth/authService';
 
 interface SettingsContentProps {
   onClose?: () => void;

@@ -5,8 +5,8 @@
  * Inspired by Claude's clean interface with focus on content.
  */
 
+import { Theme } from '@/../contexts/ThemeContext';
 import { Platform, StyleSheet } from 'react-native';
-import { Theme } from '../../../contexts/ThemeContext';
 
 export const createCollectionStyles = (theme: Theme) => StyleSheet.create({
   container: {

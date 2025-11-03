@@ -5,9 +5,9 @@
  * Separated for focused responsibility and easier testing.
  */
 
+import { OnboardingStep } from '@/hooks/onboarding/useOnboardingAnimationController';
 import React from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { OnboardingStep } from '../../hooks/onboarding/useOnboardingAnimationController';
 
 interface OnboardingFormProps {
   currentStep: OnboardingStep;

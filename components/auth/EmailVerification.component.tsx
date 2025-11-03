@@ -7,20 +7,20 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    Dimensions,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Theme } from '../../contexts/ThemeContext';
-import authService from '../../services/auth/authService';
+import { Theme } from '@/contexts/ThemeContext';
+import authService from '@/services/auth/authService';
 
 interface EmailVerificationScreenProps {
   theme: Theme;

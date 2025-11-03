@@ -4,9 +4,9 @@
  * Centralizes Supabase Auth interactions for email/password authentication.
  */
 
+import { supabase } from '@/config/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { User } from '@supabase/supabase-js';
-import { supabase } from '../../config/supabase';
 import userProfileService from './userProfileService';
 
 export interface AuthUser {

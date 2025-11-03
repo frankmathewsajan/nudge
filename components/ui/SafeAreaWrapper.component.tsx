@@ -5,10 +5,10 @@
  * Can be extended with common UI elements like offline indicators, loading states, etc.
  */
 
+import { useTheme } from '@/contexts/ThemeContext';
 import React from 'react';
 import { StatusBar, StyleSheet, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface SafeAreaWrapperProps {
   children: React.ReactNode;

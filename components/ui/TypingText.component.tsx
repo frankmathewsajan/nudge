@@ -5,9 +5,9 @@
  * All timing and state management delegated to useTypingAnimation hook.
  */
 
+import { useTypingAnimation } from '@/hooks/onboarding/useTypingAnimation';
 import React, { useEffect, useState } from 'react';
 import { Animated, Text, TextStyle, View } from 'react-native';
-import { useTypingAnimation } from '../../hooks/onboarding/useTypingAnimation';
 
 interface TypingTextProps {
   text: string;

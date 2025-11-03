@@ -1,8 +1,8 @@
 // Onboarding Styles - Theme-aware styling
 // Uses theme context to provide light/dark theme support
 
+import { Theme } from '@/contexts/ThemeContext';
 import { StyleSheet } from 'react-native';
-import { Theme } from '../../contexts/ThemeContext';
 
 export const createOnboardingStyles = (theme: Theme) => StyleSheet.create({
   container: {

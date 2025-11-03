@@ -4,8 +4,8 @@
  * Handles user profile management with Supabase database and local storage sync
  */
 
+import { supabase } from '@/config/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { supabase } from '../../config/supabase';
 
 export interface UserProfile {
   uid: string;
@@ -388,9 +388,21 @@ export const syncAllDataToFirestore = async (uid: string): Promise<void> => {
     // Save to Supabase user_backups table (upsert to replace existing)
     const { error } = await supabase
       .from('user_backups')
-      .upsert(backupData, { onConflict: 'user_id' });
+      .upsert(backupData, { 
+        onConflict: 'user_id',
+        ignoreDuplicates: false  // Always update, never ignore
+      });
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Failed to save backup:', error);
+      throw error;
+    }
+    
+    console.log('✅ Backup saved to Supabase:', {
+      user_id: uid,
+      user_name: userName,
+      onboarding_completed: onboardingCompleted,
+    });
     
     // Also ensure the main profile is up to date with onboarding status and name
     const currentProfile = await getUserProfile(uid);
@@ -469,6 +481,16 @@ export const restoreUserDataFromBackup = async (uid: string): Promise<{
     }
     
     console.log('📦 Backup found, restoring data...');
+    console.log('📊 Backup contents:', {
+      user_id: data.user_id,
+      user_name: data.user_name,
+      onboarding_completed: data.onboarding_completed,
+      synced_at: data.synced_at,
+      has_goals: !!data.goals,
+      has_history: !!data.goal_history,
+      has_profile: !!data.user_profile,
+    });
+    
     const restoredItems: string[] = [];
     
     // Restore user name and onboarding status

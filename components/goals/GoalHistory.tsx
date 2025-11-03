@@ -5,21 +5,21 @@
  * and re-access planning screens
  */
 
+import { Theme } from '@/contexts/ThemeContext';
+import { GoalAnalysisResponse } from '@/services/ai/geminiService';
+import { GoalHistoryItem, storageService } from '@/services/storage/storageService';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-    Alert,
-    FlatList,
-    RefreshControl,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Alert,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Theme } from '../../contexts/ThemeContext';
-import { GoalAnalysisResponse } from '../../services/ai/geminiService';
-import { GoalHistoryItem, storageService } from '../../services/storage/storageService';
 
 interface GoalHistoryTabProps {
   theme: Theme;

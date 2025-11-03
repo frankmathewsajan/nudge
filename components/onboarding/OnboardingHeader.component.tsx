@@ -5,9 +5,9 @@
  * Separated for better maintainability and single responsibility.
  */
 
+import { OnboardingStep } from '@/hooks/onboarding/useOnboardingAnimationController';
 import React from 'react';
 import { Text, View } from 'react-native';
-import { OnboardingStep } from '../../hooks/onboarding/useOnboardingAnimationController';
 import { TypingText } from '../ui/TypingText.component';
 
 interface OnboardingHeaderProps {

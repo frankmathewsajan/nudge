@@ -6,10 +6,10 @@
  * - Register -> Email verification -> Onboarding -> Main app
  */
 
+import { useTheme } from '@/contexts/ThemeContext';
+import authService, { AuthUser } from '@/services/auth/authService';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
-import { useTheme } from '../../contexts/ThemeContext';
-import authService, { AuthUser } from '../../services/auth/authService';
 import { AuthScreen } from './AuthScreen.component';
 import { EmailVerificationScreen } from './EmailVerification.component';
 

@@ -5,6 +5,8 @@
  * Separated from UI for clean architecture and testability.
  */
 
+import authService from '@/services/auth/authService';
+import promptService from '@/services/prompts/promptService';
 import { useCallback, useState } from 'react';
 
 interface Goal {
@@ -63,6 +65,14 @@ export const useGoalCollection = (
         text: currentGoal.trim(),
         createdAt: new Date(),
       };
+
+      // Save to Supabase prompts table
+      const currentUser = authService.getCurrentUser();
+      if (currentUser) {
+        await promptService.savePrompt(currentGoal.trim(), currentUser.uid);
+      } else {
+        console.warn('⚠️ No user found, goal saved locally only');
+      }
 
       setGoals(prev => [...prev, newGoal]);
       setCurrentGoal('');

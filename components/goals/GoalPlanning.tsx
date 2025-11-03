@@ -5,21 +5,21 @@
  * functionality similar to Claude's interface.
  */
 
+import { createPlanningStyles } from '@/assets/styles/goals/planning.styles';
+import { useTheme } from '@/contexts/ThemeContext';
+import { GoalAnalysisResponse } from '@/services/ai/geminiService';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createPlanningStyles } from '../../assets/styles/goals/planning.styles';
-import { useTheme } from '../../contexts/ThemeContext';
-import { GoalAnalysisResponse } from '../../services/ai/geminiService';
 import AnimatedBackground from '../ui/AnimatedBackground.component';
 import { TerminalLoader } from '../ui/TerminalLoader.component';
 import { ThemeToggle } from '../ui/ThemeToggle.component';

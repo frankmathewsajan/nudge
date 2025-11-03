@@ -5,10 +5,10 @@
  * Follows app naming conventions and theme integration
  */
 
+import { useTheme } from '@/contexts/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { AccessibilityInfo, TouchableOpacity, TouchableOpacityProps } from 'react-native';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface SettingsButtonProps extends Omit<TouchableOpacityProps, 'onPress'> {
   onPress: () => void;

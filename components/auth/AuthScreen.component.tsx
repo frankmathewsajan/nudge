@@ -4,22 +4,22 @@
  * Clean, simplified authentication with email verification.
  */
 
+import { useTheme } from '@/contexts/ThemeContext';
+import authService, { AuthUser } from '@/services/auth/authService';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Animated,
-    SafeAreaView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  Animated,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheme } from '../../contexts/ThemeContext';
-import authService, { AuthUser } from '../../services/auth/authService';
 import AnimatedBackground from '../ui/AnimatedBackground.component';
 import { ThemeToggle } from '../ui/ThemeToggle.component';
 

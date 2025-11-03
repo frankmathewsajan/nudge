@@ -1,7 +1,7 @@
+import { useTheme } from '@/contexts/ThemeContext';
 import React, { useEffect, useRef } from 'react';
 import { Animated, Dimensions, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, G, LinearGradient, Polygon, Stop } from 'react-native-svg';
-import { useTheme } from '../../contexts/ThemeContext';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 // Add extra height to ensure full coverage with spinning elements

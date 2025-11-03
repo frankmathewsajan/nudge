@@ -5,10 +5,10 @@
  * Separated for focused responsibility and compliance clarity.
  */
 
+import { OnboardingStep } from '@/hooks/onboarding/useOnboardingAnimationController';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
-import { OnboardingStep } from '../../hooks/onboarding/useOnboardingAnimationController';
 import { TypingText } from '../ui/TypingText.component';
 
 interface OnboardingPolicyProps {

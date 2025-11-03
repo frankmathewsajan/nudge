@@ -5,16 +5,16 @@
  * Provides engaging feedback during goal analysis
  */
 
+import { Theme } from '@/contexts/ThemeContext';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    Animated,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Animated,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native';
-import { Theme } from '../../contexts/ThemeContext';
 
 interface TerminalLoaderProps {
   theme: Theme;

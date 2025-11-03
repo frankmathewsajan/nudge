@@ -5,13 +5,13 @@
  * All business logic extracted to custom hooks for better maintainability.
  */
 
+import { createOnboardingStyles } from '@/assets/styles/onboarding.styles';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useOnboardingAnimationController } from '@/hooks/onboarding/useOnboardingAnimationController';
+import { useOnboardingFormController } from '@/hooks/onboarding/useOnboardingFormController';
 import React from 'react';
 import { SafeAreaView, StatusBar } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createOnboardingStyles } from '../../assets/styles/onboarding.styles';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useOnboardingAnimationController } from '../../hooks/onboarding/useOnboardingAnimationController';
-import { useOnboardingFormController } from '../../hooks/onboarding/useOnboardingFormController';
 import AnimatedBackground from '../ui/AnimatedBackground.component';
 import { ThemeToggle } from '../ui/ThemeToggle.component';
 import { OnboardingContent } from './OnboardingContent.component';

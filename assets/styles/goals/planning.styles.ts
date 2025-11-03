@@ -5,8 +5,8 @@
  * Follows Claude's design principles with clear typography and spacing.
  */
 
+import { Theme } from '@/../contexts/ThemeContext';
 import { Platform, StyleSheet } from 'react-native';
-import { Theme } from '../../../contexts/ThemeContext';
 
 export const createPlanningStyles = (theme: Theme) => StyleSheet.create({
   container: {

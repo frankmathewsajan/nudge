@@ -5,7 +5,14 @@
  * Matches onboarding aesthetic with seamless keyboard handling.
  */
 
+import { createCollectionStyles } from '@/assets/styles/goals/collection.styles';
 import { CustomMenuIcon } from '@/components/ui/CustomMenuIcon.component';
+import { useTheme } from '@/contexts/ThemeContext';
+import { useGoalCollection } from '@/hooks/goals/useGoalCollection';
+import { useKeyboardAware } from '@/hooks/goals/useKeyboardAware';
+import geminiService, { GoalAnalysisResponse } from '@/services/ai/geminiService';
+import { storageService } from '@/services/storage/storageService';
+import { GoalAnalysisResponse as V2GoalAnalysisResponse } from '@/utils/ai/geminiTypes';
 import { MaterialIcons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import React, { useEffect, useRef, useState } from 'react';
@@ -22,17 +29,10 @@ import {
   View
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createCollectionStyles } from '../../assets/styles/goals/collection.styles';
-import { useTheme } from '../../contexts/ThemeContext';
-import { useGoalCollection } from '../../hooks/goals/useGoalCollection';
-import { useKeyboardAware } from '../../hooks/goals/useKeyboardAware';
-import geminiService, { GoalAnalysisResponse } from '../../services/ai/geminiService';
-import { storageService } from '../../services/storage/storageService';
-import { GoalAnalysisResponse as V2GoalAnalysisResponse } from '../../utils/ai/geminiTypes';
 import AnimatedBackground from '../ui/AnimatedBackground.component';
 import { TerminalLoader } from '../ui/TerminalLoader.component';
 import { ThemeToggle } from '../ui/ThemeToggle.component';
-import { GoalPlanningScreen } from './GoalPlanning.component';
+import { GoalPlanningScreen } from './GoalPlanning';
 
 /**
  * Convert V2 GoalAnalysisResponse to the old format expected by the UI
@@ -687,7 +687,7 @@ export const GoalCollectionScreen: React.FC<GoalCollectionScreenProps> = ({
                 ]}
               >
                 <LottieView
-                  source={require('../../assets/animations/1.json')}
+                  source={require('@/assets/animations/1.json')}
                   style={{ 
                     width: keyboard.isVisible ? 250 : 300, 
                     height: keyboard.isVisible ? 250 : 300 
